@@ -1,0 +1,20 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.resolvers = exports.__prod__ = exports.MONEY_INTRODUCE_PERCENT = exports.MONEY_COMMENT_PERCENT = exports.REJECTED_AMOUNT = exports.USER_LIMIT = exports.COMMENT_LIMIT_PER_PAGE = exports.PRODUCT_LIMIT_PER_PAGE = void 0;
+const AdminResolver_1 = require("../resolver/AdminResolver");
+const BillResolver_1 = require("../resolver/BillResolver");
+const BrandResolver_1 = require("../resolver/BrandResolver");
+const CommentResolver_1 = require("../resolver/CommentResolver");
+const MoneyBonusResolver_1 = require("../resolver/MoneyBonusResolver");
+const MyEventResolver_1 = require("../resolver/MyEventResolver");
+const ProductResolver_1 = require("../resolver/ProductResolver");
+const UserResolver_1 = require("../resolver/UserResolver");
+exports.PRODUCT_LIMIT_PER_PAGE = 10;
+exports.COMMENT_LIMIT_PER_PAGE = 5;
+exports.USER_LIMIT = 5;
+exports.REJECTED_AMOUNT = 2;
+exports.MONEY_COMMENT_PERCENT = 1 / 100;
+exports.MONEY_INTRODUCE_PERCENT = 3 / 100;
+exports.__prod__ = process.env.NODE_ENV === "production";
+exports.resolvers = [AdminResolver_1.AdminResolver, BillResolver_1.BillResolver, BrandResolver_1.BrandResolver, CommentResolver_1.CommentResolver, MoneyBonusResolver_1.MoneyBonusResolver, MyEventResolver_1.MyEventResolver, ProductResolver_1.ProductResolver, UserResolver_1.UserResolver];
+//# sourceMappingURL=constants.js.map
