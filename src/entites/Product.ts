@@ -37,6 +37,10 @@ export class Product extends BaseEntity {
   @Column()
   description!: string;
 
+  @Field({defaultValue:0})
+  @Column({default:0})
+  salesPercent:number
+
   //Giá hiển thị là một trong prices
   @Field()
   @Column()

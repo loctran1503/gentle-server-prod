@@ -9,10 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initial1651043538635 = void 0;
-class initial1651043538635 {
+exports.initial1651888374596 = void 0;
+class initial1651888374596 {
     constructor() {
-        this.name = 'initial1651043538635';
+        this.name = 'initial1651888374596';
     }
     up(queryRunner) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -20,7 +20,7 @@ class initial1651043538635 {
             yield queryRunner.query(`CREATE TABLE "product_class" ("id" SERIAL NOT NULL, "name" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "kindId" integer, CONSTRAINT "UQ_91dbbe62c0d43a209ff4faee3b0" UNIQUE ("name"), CONSTRAINT "PK_d59ae9c0bc6668d8eb4568f2e27" PRIMARY KEY ("id"))`);
             yield queryRunner.query(`CREATE TABLE "brand" ("id" SERIAL NOT NULL, "brandName" character varying NOT NULL, "thumbnail" character varying NOT NULL, "description" character varying NOT NULL, "kindId" integer, CONSTRAINT "UQ_abb84c510fd9e50b42a6c6d332c" UNIQUE ("brandName"), CONSTRAINT "PK_a5d20765ddd942eb5de4eee2d7f" PRIMARY KEY ("id"))`);
             yield queryRunner.query(`CREATE TABLE "price" ("id" SERIAL NOT NULL, "type" character varying NOT NULL, "price" integer NOT NULL, "status" integer NOT NULL, "isGift" boolean, "productId" integer, CONSTRAINT "PK_d163e55e8cce6908b2e0f27cea4" PRIMARY KEY ("id"))`);
-            yield queryRunner.query(`CREATE TABLE "product" ("id" SERIAL NOT NULL, "productName" character varying NOT NULL, "thumbnail" character varying NOT NULL, "imgDescription" text NOT NULL, "description" character varying NOT NULL, "priceToDisplay" integer NOT NULL, "sales" integer NOT NULL DEFAULT '0', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "brandId" integer, "kindId" integer, "classId" integer, CONSTRAINT "UQ_faeabc94d0778daea8ed0a8a3c5" UNIQUE ("productName"), CONSTRAINT "PK_bebc9158e480b949565b4dc7a82" PRIMARY KEY ("id"))`);
+            yield queryRunner.query(`CREATE TABLE "product" ("id" SERIAL NOT NULL, "productName" character varying NOT NULL, "thumbnail" character varying NOT NULL, "imgDescription" text NOT NULL, "description" character varying NOT NULL, "salesPercent" integer NOT NULL DEFAULT '0', "priceToDisplay" integer NOT NULL, "sales" integer NOT NULL DEFAULT '0', "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "brandId" integer, "kindId" integer, "classId" integer, CONSTRAINT "UQ_faeabc94d0778daea8ed0a8a3c5" UNIQUE ("productName"), CONSTRAINT "PK_bebc9158e480b949565b4dc7a82" PRIMARY KEY ("id"))`);
             yield queryRunner.query(`CREATE TABLE "bill_product" ("id" SERIAL NOT NULL, "productName" character varying NOT NULL, "productThumbnail" character varying NOT NULL, "productType" character varying NOT NULL, "productPrice" integer NOT NULL, "productAmount" integer NOT NULL, "priceIdForLocal" integer, "billId" integer, CONSTRAINT "PK_8f8fa9c4a20b839a9272d908b87" PRIMARY KEY ("id"))`);
             yield queryRunner.query(`CREATE TABLE "bill_cancel_reason" ("id" SERIAL NOT NULL, "reason" character varying NOT NULL, "createdAt" TIMESTAMP NOT NULL DEFAULT now(), "customerId" integer, CONSTRAINT "PK_c27a0ae1681cb46a99c212fbb94" PRIMARY KEY ("id"))`);
             yield queryRunner.query(`CREATE TABLE "customer" ("id" SERIAL NOT NULL, "customerName" character varying NOT NULL, "customerPhone" character varying NOT NULL, "city" character varying NOT NULL, "province" character varying NOT NULL, "address" character varying NOT NULL, "rejectedAmount" integer NOT NULL DEFAULT '0', CONSTRAINT "PK_a7a13f4cacb744524e44dfdad32" PRIMARY KEY ("id"))`);
@@ -101,5 +101,5 @@ class initial1651043538635 {
         });
     }
 }
-exports.initial1651043538635 = initial1651043538635;
-//# sourceMappingURL=1651043538635-initial.js.map
+exports.initial1651888374596 = initial1651888374596;
+//# sourceMappingURL=1651888374596-initial.js.map

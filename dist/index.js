@@ -30,13 +30,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     catch (error) {
         console.log(`Typeorm STARTING ERROR:${error}`);
     }
-    try {
-        if (constants_1.__prod__)
-            yield data_source_1.dataSource.runMigrations();
-    }
-    catch (error) {
-        console.log(`MIGRATION ERROR:${error}`);
-    }
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({
         origin: constants_1.__prod__

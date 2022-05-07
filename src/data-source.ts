@@ -44,7 +44,7 @@ export const dataSource = new DataSource({
         ssl: true,
       }
     : {}),
-    ...(__prod__   ? {migrationsRun:true} :{ synchronize: true } ),
+    ...(!__prod__   ? {migrationsRun:true} :{ synchronize: true } ),
   logging: true,
   entities: [
     Admin,

@@ -39,7 +39,7 @@ exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object
         },
         ssl: true,
     }
-    : {})), (!constants_1.__prod__ && { synchronize: true })), { logging: false, entities: [
+    : {})), (!constants_1.__prod__ ? { migrationsRun: true } : { synchronize: true })), { logging: true, entities: [
         Admin_1.Admin,
         Bill_1.Bill,
         BillCancelReason_1.BillCancelReason,
