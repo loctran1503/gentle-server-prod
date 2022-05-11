@@ -1,15 +1,15 @@
 import { Field, ObjectType } from "type-graphql";
 import {
-    BaseEntity,
-    Column,
-    CreateDateColumn,
-    Entity,
-     OneToMany, PrimaryGeneratedColumn
+  BaseEntity,
+  Column,
+  CreateDateColumn,
+  Entity, OneToMany, PrimaryGeneratedColumn
 } from "typeorm";
-import { Brand } from "./Brand";
 
+import { Country } from "./Country";
 import { Product } from "./Product";
 import { ProductClass } from "./ProductClass";
+
 
 
 @ObjectType()
@@ -20,8 +20,8 @@ export class ProductKind extends BaseEntity {
   id!: number;
 
   @Field()
-  @Column({unique:true})
-  name!: string;
+  @Column()
+  name: string;
 
   @Field(_return => [ProductClass],{nullable:true})
   @OneToMany(() =>ProductClass,item => item.kind,{nullable:true})
@@ -31,11 +31,9 @@ export class ProductKind extends BaseEntity {
   @OneToMany(() =>Product,product => product.kind,{nullable:true})
   products?: Product[];
 
-  @Field(_return => [Brand],{nullable:true})
-  @OneToMany(() =>Brand,brand => brand.kind,{nullable:true})
-  brands?: Brand[];
-
-  
+  @Field(_return => [Country],{nullable:true})
+  @OneToMany(() =>Country,countries => countries.kind,{nullable:true})
+  countries?: Country[];
 
   @Field()
   @CreateDateColumn()

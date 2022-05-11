@@ -10,7 +10,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoneyBonus = void 0;
-const MoneyBonusType_1 = require("../types/others/MoneyBonusType");
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const User_1 = require("./User");
@@ -31,15 +30,6 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], MoneyBonus.prototype, "description", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    (0, typeorm_1.Column)({
-        type: 'enum',
-        enum: MoneyBonusType_1.MoneyBonusType,
-        default: MoneyBonusType_1.MoneyBonusType.GET
-    }),
-    __metadata("design:type", String)
-], MoneyBonus.prototype, "type", void 0);
 __decorate([
     (0, type_graphql_1.Field)((_return) => User_1.User),
     (0, typeorm_1.ManyToOne)(() => User_1.User, (user) => user.moneyBonuses),

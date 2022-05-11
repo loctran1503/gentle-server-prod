@@ -1,9 +1,7 @@
-import { Field, InputType, registerEnumType } from "type-graphql";
-import { MoneyBonusType } from "../others/MoneyBonusType";
+import { Field, InputType } from "type-graphql";
 
-registerEnumType(MoneyBonusType, {
-  name: "MoneyBonusType", // this one is mandatory
-});
+
+
 
 @InputType()
 export class MoneyBonusInput {
@@ -16,7 +14,6 @@ export class MoneyBonusInput {
   @Field()
   userId:number
 
-  @Field((_type) => MoneyBonusType) // it's very important
-  type: MoneyBonusType;
+
 
 }

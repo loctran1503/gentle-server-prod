@@ -50,6 +50,7 @@ const BillProduct_1 = require("../entites/BillProduct");
 const getUserId_1 = require("../middleware/getUserId");
 const auth_1 = require("../utils/auth");
 const Admin_1 = require("../entites/Admin");
+const Country_1 = require("../entites/Country");
 let ProductResolver = class ProductResolver {
     commentCount(root) {
         var _a;
@@ -62,12 +63,33 @@ let ProductResolver = class ProductResolver {
         }
     }
     minPrice(root) {
-        const min = Math.min.apply(Math, root.prices.map((price) => price.price));
+        const min = Math.min.apply(Math, root.prices.map((price) => price.price * ((100 - price.salesPercent) / 100)));
         return min;
     }
     maxPrice(root) {
-        const max = Math.max.apply(Math, root.prices.map((price) => price.price));
+        const max = Math.max.apply(Math, root.prices.map((price) => price.price * ((100 - price.salesPercent) / 100)));
         return max;
+    }
+    priceAfterDiscount(root) {
+        if (root.salesPercent > 0) {
+            const price = root.priceToDisplay * ((100 - root.salesPercent) / 100);
+            return price;
+        }
+        else {
+            return root.priceToDisplay;
+        }
+    }
+    otherInfo(root) {
+        switch (root.country.countryName) {
+            case constants_1.AMERICA:
+                return constants_1.AMERICA_INFO;
+            case constants_1.KOREA:
+                return constants_1.KOREA_INFO;
+            case constants_1.VIETNAM:
+                return constants_1.VIETNAM_INFO;
+            default:
+                return [];
+        }
     }
     imageList(root) {
         let imageList = root.imgDescription;
@@ -90,7 +112,7 @@ let ProductResolver = class ProductResolver {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    const { productName, thumbnail, imgDescription, description, prices, priceToDisplay, brandId, sales, kindId, classId, } = productInput;
+                    const { productName, thumbnail, imgDescription, description, prices, brandId, sales, kindId, classId, countryName, } = productInput;
                     const brandExisting = yield transactionManager.findOne(Brand_1.Brand, {
                         where: {
                             id: brandId,
@@ -106,28 +128,60 @@ let ProductResolver = class ProductResolver {
                             id: classId,
                         },
                     });
-                    if (!brandExisting || !kindExisting || !classExisting)
+                    const country = yield transactionManager.findOne(Country_1.Country, {
+                        where: {
+                            countryName,
+                        },
+                    });
+                    if (!brandExisting)
                         return {
                             code: 400,
                             success: false,
-                            message: "Brand or kind or class not found",
+                            message: "Brand  not found",
                         };
+                    if (!kindExisting)
+                        return {
+                            code: 400,
+                            success: false,
+                            message: "kind  not found",
+                        };
+                    if (!classExisting)
+                        return {
+                            code: 400,
+                            success: false,
+                            message: " class  not found",
+                        };
+                    if (!country)
+                        return {
+                            code: 400,
+                            success: false,
+                            message: "country not found",
+                        };
+                    const totalPrice = prices.reduce((prev, current) => prev + current.price, 0);
+                    const salesPercent = Math.max.apply(Math, prices.map((price) => price.salesPercent));
                     const newProduct = transactionManager.create(Product_1.Product, {
                         productName,
                         thumbnail,
                         imgDescription,
                         description,
-                        priceToDisplay,
+                        priceToDisplay: Math.floor(totalPrice / prices.length),
                         brand: brandExisting,
                         kind: kindExisting,
                         class: classExisting,
+                        sales: sales || 0,
+                        country: country,
+                        salesPercent: salesPercent || 0,
                     });
-                    if (sales)
-                        newProduct.sales = sales;
                     yield transactionManager.save(newProduct);
                     if (prices) {
                         yield Promise.all(prices.map((price) => __awaiter(this, void 0, void 0, function* () {
-                            const newPrice = transactionManager.create(Price_1.Price, Object.assign(Object.assign({}, price), { product: newProduct }));
+                            const newPrice = transactionManager.create(Price_1.Price, {
+                                type: price.type,
+                                price: price.price,
+                                salesPercent: price.salesPercent,
+                                status: price.status,
+                                product: newProduct,
+                            });
                             yield transactionManager.save(newPrice);
                         }))).catch((error) => console.log(error));
                     }
@@ -163,6 +217,7 @@ let ProductResolver = class ProductResolver {
                         "prices",
                         "brand",
                         "kind",
+                        "country",
                     ],
                 });
                 if (product) {
@@ -185,58 +240,6 @@ let ProductResolver = class ProductResolver {
                     code: 500,
                     success: false,
                     message: error.message,
-                };
-            }
-        });
-    }
-    getProducts(paginationOptions) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const { skip, type } = paginationOptions;
-                const option = {
-                    take: constants_1.PRODUCT_LIMIT_PER_PAGE,
-                    skip,
-                    relations: ["comments", "prices"],
-                };
-                switch (type) {
-                    case "PRICE_DESC":
-                        option.order = {
-                            priceToDisplay: "DESC",
-                        };
-                        break;
-                    case "PRICE_ASC":
-                        option.order = {
-                            priceToDisplay: "ASC",
-                        };
-                        break;
-                    case "DATE_DESC":
-                        option.order = {
-                            createdAt: "DESC",
-                        };
-                        break;
-                    case "SALES_DESC":
-                        option.order = {
-                            sales: "DESC",
-                        };
-                        break;
-                    default:
-                        break;
-                }
-                const products = yield Product_1.Product.find(option);
-                const totalCount = yield Product_1.Product.count();
-                return {
-                    code: 200,
-                    success: true,
-                    totalCount,
-                    pageSize: constants_1.PRODUCT_LIMIT_PER_PAGE,
-                    products,
-                };
-            }
-            catch (error) {
-                return {
-                    code: 500,
-                    success: false,
-                    message: `Server error:${error.message}`,
                 };
             }
         });
@@ -348,23 +351,35 @@ let ProductResolver = class ProductResolver {
             }
         });
     }
-    getProductsForIndex(take) {
+    getProductsForIndex(countryName) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const realTake = Math.min(6, take);
-                const kinds = yield ProductKind_1.ProductKind.find();
+                const realTake = 10;
+                const kinds = yield ProductKind_1.ProductKind.find({
+                    where: {
+                        countries: {
+                            countryName,
+                        },
+                        products: !null,
+                    },
+                    relations: ["countries", "products"],
+                });
                 const res = yield Promise.all(kinds.map((item) => __awaiter(this, void 0, void 0, function* () {
                     item.products = yield Product_1.Product.find({
                         where: {
                             kind: {
                                 id: item.id,
                             },
+                            country: {
+                                countryName,
+                            },
                         },
                         order: {
                             sales: "DESC",
+                            salesPercent: "DESC"
                         },
                         take: realTake,
-                        relations: ["kind", "class", "comments"],
+                        relations: ["comments", "country", "prices", "class"],
                     });
                     return item;
                 })))
@@ -393,11 +408,11 @@ let ProductResolver = class ProductResolver {
             }
         });
     }
-    getProductsByKind(paginationOptions) {
+    getProductsByKind(paginationOptions, countryName) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const { skip, type, kindId, productClassId } = paginationOptions;
-                const option = {
+                const findProductsOption = {
                     take: constants_1.PRODUCT_LIMIT_PER_PAGE,
                     skip,
                     relations: ["comments", "class", "prices"],
@@ -405,52 +420,69 @@ let ProductResolver = class ProductResolver {
                         kind: {
                             id: kindId,
                         },
+                        country: {
+                            countryName,
+                        },
                     },
                 };
-                const totalCountOptions = {
+                const totalCountProductOptions = {
                     where: {
                         kind: {
                             id: kindId,
                         },
+                        country: {
+                            countryName,
+                        },
                     },
                 };
                 if (productClassId && productClassId !== 0) {
-                    option.where = {
+                    findProductsOption.where = {
                         kind: {
                             id: kindId,
                         },
                         class: {
                             id: productClassId,
+                        },
+                        country: {
+                            countryName,
                         },
                     };
-                    totalCountOptions.where = {
+                    totalCountProductOptions.where = {
                         kind: {
                             id: kindId,
                         },
                         class: {
                             id: productClassId,
+                        },
+                        country: {
+                            countryName,
                         },
                     };
                 }
                 switch (type) {
                     case "PRICE_DESC":
-                        option.order = {
+                        findProductsOption.order = {
                             priceToDisplay: "DESC",
                         };
                         break;
                     case "PRICE_ASC":
-                        option.order = {
+                        findProductsOption.order = {
                             priceToDisplay: "ASC",
                         };
                         break;
                     case "DATE_DESC":
-                        option.order = {
+                        findProductsOption.order = {
                             createdAt: "DESC",
                         };
                         break;
                     case "SALES_DESC":
-                        option.order = {
+                        findProductsOption.order = {
                             sales: "DESC",
+                        };
+                        break;
+                    case "DISCOUNT_DESC":
+                        findProductsOption.order = {
+                            salesPercent: "DESC",
                         };
                         break;
                     default:
@@ -467,8 +499,8 @@ let ProductResolver = class ProductResolver {
                         success: false,
                         message: "Kind not found",
                     };
-                const products = yield Product_1.Product.find(option);
-                const totalCount = yield Product_1.Product.count(totalCountOptions);
+                const products = yield Product_1.Product.find(findProductsOption);
+                const totalCount = yield Product_1.Product.count(totalCountProductOptions);
                 const productClasses = yield ProductClass_1.ProductClass.find({
                     where: {
                         kind: {
@@ -536,35 +568,34 @@ let ProductResolver = class ProductResolver {
                         productPrice: price.price,
                         productAmount: item.productAmount,
                         priceIdForLocal: item.priceIdForLocal,
+                        countryNameForDeliveryPrice: item.countryNameForDeliveryPrice,
                     });
                     return billProduct;
                 }))).then((list) => {
                     return list;
                 });
-                const kinds = yield ProductKind_1.ProductKind.find();
                 const brands = yield Brand_1.Brand.find();
-                if (user.userId !== undefined) {
+                if (user) {
                     const adminExisting = yield Admin_1.Admin.findOne({
                         where: {
-                            id: user.userId
-                        }
+                            id: user.userId,
+                        },
                     });
                     if (adminExisting) {
                         return {
                             code: 200,
                             success: true,
                             products,
-                            kinds,
                             brands,
                             avatar: adminExisting.avatar,
                             token: (0, auth_1.createToken)("accessToken", adminExisting.id.toString()),
-                            type: "admin"
+                            type: "admin",
                         };
                     }
                     else {
                         const userExisting = yield User_1.User.findOne({
                             where: {
-                                id: +user.userId,
+                                id: user.userId,
                             },
                         });
                         if (userExisting) {
@@ -572,29 +603,28 @@ let ProductResolver = class ProductResolver {
                                 code: 200,
                                 success: true,
                                 products,
-                                kinds,
                                 brands,
                                 avatar: userExisting.userAvatar,
                                 token: (0, auth_1.createToken)("accessToken", userExisting.id.toString()),
                                 type: "user",
-                                isHidden: userExisting.isHidden
+                                isHidden: userExisting.isHidden,
                             };
                         }
                         else {
                             return {
-                                code: 400,
-                                success: false,
-                                message: "User not found",
+                                code: 999,
+                                success: true,
+                                products,
+                                brands,
                             };
                         }
                     }
                 }
                 else {
                     return {
-                        code: 200,
+                        code: 999,
                         success: true,
                         products,
-                        kinds,
                         brands,
                     };
                 }
@@ -631,6 +661,20 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ProductResolver.prototype, "maxPrice", null);
 __decorate([
+    (0, type_graphql_1.FieldResolver)((_return) => Number),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Product_1.Product]),
+    __metadata("design:returntype", void 0)
+], ProductResolver.prototype, "priceAfterDiscount", null);
+__decorate([
+    (0, type_graphql_1.FieldResolver)((_return) => [String]),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Product_1.Product]),
+    __metadata("design:returntype", void 0)
+], ProductResolver.prototype, "otherInfo", null);
+__decorate([
     (0, type_graphql_1.FieldResolver)((_return) => [String]),
     __param(0, (0, type_graphql_1.Root)()),
     __metadata("design:type", Function),
@@ -660,13 +704,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], ProductResolver.prototype, "getProduct", null);
 __decorate([
-    (0, type_graphql_1.Query)((_return) => PaginationProductsResponse_1.PaginationProductsResponse),
-    __param(0, (0, type_graphql_1.Arg)("paginationOptions")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [SearchOptionsInput_1.PaginationOptionsInput]),
-    __metadata("design:returntype", Promise)
-], ProductResolver.prototype, "getProducts", null);
-__decorate([
     (0, type_graphql_1.Query)((_return) => ProductResponse_1.ProductResponse),
     __param(0, (0, type_graphql_1.Arg)("value")),
     __metadata("design:type", Function),
@@ -688,16 +725,17 @@ __decorate([
 ], ProductResolver.prototype, "getPaginationUsersToday", null);
 __decorate([
     (0, type_graphql_1.Query)((_return) => ProductKindResponse_1.ProductKindResponse),
-    __param(0, (0, type_graphql_1.Arg)("take")),
+    __param(0, (0, type_graphql_1.Arg)("countryName")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], ProductResolver.prototype, "getProductsForIndex", null);
 __decorate([
     (0, type_graphql_1.Query)((_return) => PaginationProductsResponse_1.PaginationProductsResponse),
     __param(0, (0, type_graphql_1.Arg)("paginationOptions")),
+    __param(1, (0, type_graphql_1.Arg)("countryName")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [SearchOptionsInput_1.PaginationOptionsInput]),
+    __metadata("design:paramtypes", [SearchOptionsInput_1.PaginationOptionsInput, String]),
     __metadata("design:returntype", Promise)
 ], ProductResolver.prototype, "getProductsByKind", null);
 __decorate([

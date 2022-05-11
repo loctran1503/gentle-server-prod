@@ -14,6 +14,6 @@ export class CartProductResponse implements IResponse{
     @Field(_return =>[BillProduct],{nullable:true})
     products?:BillProduct[]
 
-    
+  
 
 }

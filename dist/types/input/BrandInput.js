@@ -15,20 +15,12 @@ let BrandInput = class BrandInput {
 };
 __decorate([
     (0, type_graphql_1.Field)(),
-    __metadata("design:type", Number)
-], BrandInput.prototype, "kindId", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], BrandInput.prototype, "brandName", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
 ], BrandInput.prototype, "thumbnail", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], BrandInput.prototype, "description", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", Number)

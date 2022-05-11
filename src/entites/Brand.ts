@@ -1,16 +1,20 @@
 import { Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
-  Column, Entity, JoinTable, ManyToMany, ManyToOne, OneToMany,
+  Column, Entity, JoinTable, ManyToMany, OneToMany,
   PrimaryGeneratedColumn
 } from "typeorm";
 import { Product } from "./Product";
 import { ProductClass } from "./ProductClass";
-import { ProductKind } from "./ProductKind";
+
 
 
 @ObjectType()
-@Entity()
+@Entity({
+  orderBy:{
+    brandName:"ASC"
+  }
+})
 export class Brand
  extends BaseEntity {
   @Field()
@@ -25,14 +29,12 @@ export class Brand
   @Column()
   thumbnail: string;
 
-  @Field()
-  @Column()
-  description: string;
+  @Field({nullable:true})
+  @Column({nullable:true})
+  description?: string;
 
   
-  @Field(_return => ProductKind)
-  @ManyToOne(() => ProductKind,kind => kind.brands)
-  kind:ProductKind
+  
 
   @Field(_return => [ProductClass])
   @ManyToMany(() => ProductClass)

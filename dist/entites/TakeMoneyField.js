@@ -42,7 +42,7 @@ __decorate([
 ], TakeMoneyField.prototype, "cancelReason", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
-    (0, typeorm_1.Column)({ type: "bigint" }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", Number)
 ], TakeMoneyField.prototype, "money", void 0);
 __decorate([
@@ -51,10 +51,10 @@ __decorate([
     __metadata("design:type", String)
 ], TakeMoneyField.prototype, "isSuccessImage", void 0);
 __decorate([
-    (0, type_graphql_1.Field)({ defaultValue: true }),
-    (0, typeorm_1.Column)({ default: true }),
-    __metadata("design:type", Boolean)
-], TakeMoneyField.prototype, "isSuccess", void 0);
+    (0, type_graphql_1.Field)({ defaultValue: "" }),
+    (0, typeorm_1.Column)({ default: "" }),
+    __metadata("design:type", String)
+], TakeMoneyField.prototype, "status", void 0);
 __decorate([
     (0, type_graphql_1.Field)(_return => User_1.User),
     (0, typeorm_1.ManyToOne)(() => User_1.User, user => user.takeMoneyField),

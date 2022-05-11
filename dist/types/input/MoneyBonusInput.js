@@ -11,10 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoneyBonusInput = void 0;
 const type_graphql_1 = require("type-graphql");
-const MoneyBonusType_1 = require("../others/MoneyBonusType");
-(0, type_graphql_1.registerEnumType)(MoneyBonusType_1.MoneyBonusType, {
-    name: "MoneyBonusType",
-});
 let MoneyBonusInput = class MoneyBonusInput {
 };
 __decorate([
@@ -29,10 +25,6 @@ __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", Number)
 ], MoneyBonusInput.prototype, "userId", void 0);
-__decorate([
-    (0, type_graphql_1.Field)((_type) => MoneyBonusType_1.MoneyBonusType),
-    __metadata("design:type", String)
-], MoneyBonusInput.prototype, "type", void 0);
 MoneyBonusInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], MoneyBonusInput);

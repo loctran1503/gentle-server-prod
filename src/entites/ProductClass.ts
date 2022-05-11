@@ -21,8 +21,8 @@ export class ProductClass extends BaseEntity {
   id!: number;
 
   @Field()
-  @Column({unique:true})
-  name!: string;
+  @Column()
+  name: string;
 
   @Field(_return => [Product],{nullable:true})
   @OneToMany(() =>Product,product => product.class,{nullable:true})

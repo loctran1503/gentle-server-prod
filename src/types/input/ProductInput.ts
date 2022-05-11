@@ -15,11 +15,13 @@ export class ProductInput{
     @Field()
     description!:string
 
-    @Field()
-  priceToDisplay!: number;
+
 
     @Field(_return => [PriceInput])
     prices!:PriceInput[]
+
+    @Field()
+    countryName:string
 
     @Field()
     kindId!:number
@@ -32,5 +34,6 @@ export class ProductInput{
 
     @Field({nullable:true})
     sales?:number
+
     
 }

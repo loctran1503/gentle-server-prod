@@ -5,6 +5,7 @@ import { Bill } from "./entites/Bill";
 import { BillCancelReason } from "./entites/BillCancelReason";
 import { BillProduct } from "./entites/BillProduct";
 import { Brand } from "./entites/Brand";
+import { Country } from "./entites/Country";
 
 import { Customer } from "./entites/Customer";
 import { Feedback } from "./entites/Feedback";
@@ -28,11 +29,13 @@ export const dataSource = new DataSource({
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
+        port:25060
       }
     : {
         username: process.env.PG_USERNAME_DEV,
         password: process.env.PG_PASSWORD_DEV,
         database: process.env.DATABASE_NAME_DEV,
+       
       }),
   ...(__prod__
     ? {
@@ -45,13 +48,15 @@ export const dataSource = new DataSource({
       }
     : {}),
     ...(__prod__   ? {migrationsRun:true} :{ synchronize: true } ),
-  logging: true,
+    ...(__prod__   ? {logging:true} :{ logging: false } ),
+    
   entities: [
     Admin,
     Bill,
     BillCancelReason,
     BillProduct,
     Brand,
+    Country,
     Customer,
     Feedback,
     MoneyBonus,

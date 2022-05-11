@@ -16,7 +16,7 @@ import { getUserId } from "../middleware/getUserId";
 import { AuthInput } from "../types/input/AuthInput";
 import { BillStatusType } from "../types/others/BillStatusType";
 import { Context } from "../types/others/Context";
-import { MoneyBonusType } from "../types/others/MoneyBonusType";
+
 import { PaginationUsersResponse } from "../types/response/PaginationUsersResponse";
 import { SimpleResponse } from "../types/response/SimpleResponse";
 import { UserResponse } from "../types/response/UserResponse";
@@ -52,31 +52,6 @@ export class UserResolver {
     ).length;
   }
 
-  @FieldResolver((_return) => Number)
-  moneyCount(@Root() root: User): number {
-    const totalMoneyGet: number | undefined = root.moneyBonuses?.reduce(
-      (prev, current) => {
-        if (current.type === MoneyBonusType.GET) {
-          return (prev += +current.moneyNumber);
-        } else return prev;
-      },
-      0
-    );
-    const totalMoneyTake: number | undefined = root.moneyBonuses?.reduce(
-      (prev, current) => {
-        if (current.type === MoneyBonusType.TAKE)
-          return (prev += +current.moneyNumber);
-        else return prev;
-      },
-      0
-    );
-
-    if (totalMoneyGet !== undefined && totalMoneyTake !== undefined)
-      return totalMoneyGet - totalMoneyTake;
-    else if (totalMoneyGet !== undefined && totalMoneyGet === undefined)
-      return totalMoneyGet;
-    else return 0;
-  }
   //getUser
   @Query((_return) => UserResponse)
   @UseMiddleware(checkAuth)
@@ -117,43 +92,26 @@ export class UserResolver {
   //Login
   @Mutation((_return) => UserResponse)
   async loginWithsocial(
-    @Arg("authInput") authInput: AuthInput,
+    @Arg("authInput") authInput: AuthInput
     // @Ctx() { res }: Context
   ): Promise<UserResponse> {
     return await dataSource.transaction(async (transactionManager) => {
       try {
         const userId = authInput.userId;
 
-      
-        if (
-          authInput.userId ===
-          "lc0woETn6BO0dOCcPwo3ssNbdln2"
-        ) {
-         
-          const admin = await transactionManager.findOne(Admin, {
-            where: {
-              adminId: userId,
-            },
-          });
-          if (admin) {
-           
-            // sendRefreshToken(res, admin.id.toString());
-            return {
-              code: 200,
-              success: true,
-              message: "Admin Login successfully!",
-              token: createToken("accessToken", admin.id.toString()),
-            };
-          } else {
-          
-            const newAdmin = transactionManager.create(Admin, {
-              adminId: authInput.userId,
-              adminName: "GENTLE",
-              avatar: authInput.userAvartar,
-            });
-            await transactionManager.save(newAdmin);
-            // sendRefreshToken(res, newAdmin.id.toString());
-          }
+        const admin = await transactionManager.findOne(Admin, {
+          where: {
+            adminId: userId,
+          },
+        });
+        if (admin) {
+          // sendRefreshToken(res, admin.id.toString());
+          return {
+            code: 200,
+            success: true,
+            message: "Admin Login successfully!",
+            token: createToken("accessToken", admin.id.toString()),
+          };
         } else {
           //not is admin
           const user = await transactionManager.findOne(User, {
@@ -209,7 +167,6 @@ export class UserResolver {
           success: false,
           message: "Something wrong",
         };
-       
       } catch (error) {
         return {
           code: 500,

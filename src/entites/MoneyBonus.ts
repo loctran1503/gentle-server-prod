@@ -1,4 +1,4 @@
-import { MoneyBonusType } from "../types/others/MoneyBonusType";
+
 import { Field, ObjectType } from "type-graphql";
 import {
   BaseEntity,
@@ -27,13 +27,7 @@ export class MoneyBonus extends BaseEntity {
   @Column()
   description: string;
 
-  @Field()
-  @Column({
-    type: 'enum',
-    enum: MoneyBonusType,
-    default: MoneyBonusType.GET
-  })
-  type: MoneyBonusType;
+  
 
   @Field((_return) =>User)
   @ManyToOne(() => User, (user) => user.moneyBonuses)

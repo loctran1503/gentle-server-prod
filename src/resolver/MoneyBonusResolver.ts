@@ -1,67 +1,25 @@
-import { dataSource } from "../data-source";
+import { TakeMoneyFieldType } from "../types/others/TakeMoneyFieldType";
 import {
   Arg,
   Ctx,
   Mutation,
   Query,
   Resolver,
-  UseMiddleware,
+  UseMiddleware
 } from "type-graphql";
+import { dataSource } from "../data-source";
 import { MoneyBonus } from "../entites/MoneyBonus";
 import { TakeMoneyField } from "../entites/TakeMoneyField";
 import { User } from "../entites/User";
-import { checkAdmin } from "../middleware/checkAdmin";
 import { checkAuth } from "../middleware/checkAuth";
-import { MoneyBonusInput } from "../types/input/MoneyBonusInput";
 import { TakeMoneyFieldInput } from "../types/input/TakeMoneyFieldInput";
 import { Context } from "../types/others/Context";
-import { MoneyBonusResponse } from "../types/response/MoneyBonusResponse";
 import { SimpleResponse } from "../types/response/SimpleResponse";
 import { UserMoneyHistoryResponse } from "../types/response/UserMoneyHistory";
 
 @Resolver()
 export class MoneyBonusResolver {
-  @Mutation((_return) => MoneyBonusResponse)
-  @UseMiddleware(checkAdmin)
-  async createMoneyField(
-    @Arg("fieldInput") fieldInput: MoneyBonusInput
-  ): Promise<MoneyBonusResponse> {
-    return await dataSource.transaction(async transactionManager =>{
-      try {
-        const { moneyNumber, description, type, userId } = fieldInput;
-        const userExisting = await transactionManager.findOne(User,{
-          where: {
-            id: userId,
-          },
-        });
-        if (!userExisting)
-          return {
-            code: 400,
-            success: false,
-            message: "User not found",
-          };
   
-        const newFieldMoneyBonus = transactionManager.create(MoneyBonus,{
-          moneyNumber,
-          description,
-          type,
-          user: userExisting,
-        });
-        await transactionManager.save(newFieldMoneyBonus);
-        return {
-          code: 200,
-          success: true,
-          moneyBonus: newFieldMoneyBonus,
-        };
-      } catch (error) {
-        return {
-          code: 500,
-          success: false,
-          message: error.message,
-        };
-      }
-    })
-  }
   //Create take money field
   @Mutation((_return) => SimpleResponse)
   @UseMiddleware(checkAuth)
@@ -76,27 +34,39 @@ export class MoneyBonusResolver {
         return {
           code: 400,
           success: false,
-          message: "Money less than 50000",
+          message: "Số tiền không phù hợp",
         };
 
       const userExisting = await transactionManager.findOne(User,{
         where: {
-          id: user.userId,
+          id: user.userId
         },
+        
       });
       if (!userExisting)
         return {
           code: 400,
           success: false,
-          message: "User not authenticate",
+          message: "Không tìm thấy người dùng, vui lòng liên hệ Admin",
         };
+        if(userExisting.moneyDepot<money){
+          return {
+            code: 400,
+            success: false,
+            message: "Số tiền trong tài khoản không đủ để rút, vui lòng liên hệ Admin",
+          };
+        }
+      
       const newField = transactionManager.create(TakeMoneyField,{
         accoutName,
         accountNumber,
         accountBankName,
         money,
         user: userExisting,
+        status:TakeMoneyFieldType.PENDING
       });
+      userExisting.moneyDepot-= money
+      await transactionManager.save(userExisting)
       await transactionManager.save(newField);
       return {
         code: 200,
@@ -168,11 +138,25 @@ export class MoneyBonusResolver {
   }
 
   @Mutation((_return) => SimpleResponse)
+  @UseMiddleware(checkAuth)
   async userCancelTakeMoneyField(
-    @Arg("takeMoneyFieldId") takeMoneyFieldId: number
+    @Arg("takeMoneyFieldId") takeMoneyFieldId: number,
+    @Ctx() {user} : Context
   ): Promise<SimpleResponse> {
     return await dataSource.transaction(async transactionManager =>{
       try {
+        const userExisting = await transactionManager.findOne(User,{
+          where:{
+            id:user.userId
+          }
+        })
+        if(!userExisting)return{
+          code:400,
+          success:false,
+          message:"Không tìm thấy người dùng"
+        }
+        
+
         const existing = await transactionManager.findOne(TakeMoneyField,{
           where:{
             id:takeMoneyFieldId
@@ -184,16 +168,23 @@ export class MoneyBonusResolver {
           success:false,
           message:"Không tìm thấy id của yêu cầu"
         }
+        console.log(userExisting)
+        console.log(existing)
+        
+        userExisting.moneyDepot+= existing.money
+        await transactionManager.save(userExisting)
        
         await transactionManager.delete(TakeMoneyField,{
           id:existing.id
         })
+
         return{
           code:200,
           success:true,
           message:"Delete successfully!"
         }
       } catch (error) {
+        console.log(error)
         return {
           code: 500,
           success: false,

@@ -22,58 +22,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MoneyBonusResolver = void 0;
-const data_source_1 = require("../data-source");
+const TakeMoneyFieldType_1 = require("../types/others/TakeMoneyFieldType");
 const type_graphql_1 = require("type-graphql");
+const data_source_1 = require("../data-source");
 const MoneyBonus_1 = require("../entites/MoneyBonus");
 const TakeMoneyField_1 = require("../entites/TakeMoneyField");
 const User_1 = require("../entites/User");
-const checkAdmin_1 = require("../middleware/checkAdmin");
 const checkAuth_1 = require("../middleware/checkAuth");
-const MoneyBonusInput_1 = require("../types/input/MoneyBonusInput");
 const TakeMoneyFieldInput_1 = require("../types/input/TakeMoneyFieldInput");
-const MoneyBonusResponse_1 = require("../types/response/MoneyBonusResponse");
 const SimpleResponse_1 = require("../types/response/SimpleResponse");
 const UserMoneyHistory_1 = require("../types/response/UserMoneyHistory");
 let MoneyBonusResolver = class MoneyBonusResolver {
-    createMoneyField(fieldInput) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
-                try {
-                    const { moneyNumber, description, type, userId } = fieldInput;
-                    const userExisting = yield transactionManager.findOne(User_1.User, {
-                        where: {
-                            id: userId,
-                        },
-                    });
-                    if (!userExisting)
-                        return {
-                            code: 400,
-                            success: false,
-                            message: "User not found",
-                        };
-                    const newFieldMoneyBonus = transactionManager.create(MoneyBonus_1.MoneyBonus, {
-                        moneyNumber,
-                        description,
-                        type,
-                        user: userExisting,
-                    });
-                    yield transactionManager.save(newFieldMoneyBonus);
-                    return {
-                        code: 200,
-                        success: true,
-                        moneyBonus: newFieldMoneyBonus,
-                    };
-                }
-                catch (error) {
-                    return {
-                        code: 500,
-                        success: false,
-                        message: error.message,
-                    };
-                }
-            }));
-        });
-    }
     createTakeMoneyField(field, { user }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
@@ -83,26 +42,36 @@ let MoneyBonusResolver = class MoneyBonusResolver {
                         return {
                             code: 400,
                             success: false,
-                            message: "Money less than 50000",
+                            message: "Số tiền không phù hợp",
                         };
                     const userExisting = yield transactionManager.findOne(User_1.User, {
                         where: {
-                            id: user.userId,
+                            id: user.userId
                         },
                     });
                     if (!userExisting)
                         return {
                             code: 400,
                             success: false,
-                            message: "User not authenticate",
+                            message: "Không tìm thấy người dùng, vui lòng liên hệ Admin",
                         };
+                    if (userExisting.moneyDepot < money) {
+                        return {
+                            code: 400,
+                            success: false,
+                            message: "Số tiền trong tài khoản không đủ để rút, vui lòng liên hệ Admin",
+                        };
+                    }
                     const newField = transactionManager.create(TakeMoneyField_1.TakeMoneyField, {
                         accoutName,
                         accountNumber,
                         accountBankName,
                         money,
                         user: userExisting,
+                        status: TakeMoneyFieldType_1.TakeMoneyFieldType.PENDING
                     });
+                    userExisting.moneyDepot -= money;
+                    yield transactionManager.save(userExisting);
                     yield transactionManager.save(newField);
                     return {
                         code: 200,
@@ -174,10 +143,21 @@ let MoneyBonusResolver = class MoneyBonusResolver {
             }
         });
     }
-    userCancelTakeMoneyField(takeMoneyFieldId) {
+    userCancelTakeMoneyField(takeMoneyFieldId, { user }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
+                    const userExisting = yield transactionManager.findOne(User_1.User, {
+                        where: {
+                            id: user.userId
+                        }
+                    });
+                    if (!userExisting)
+                        return {
+                            code: 400,
+                            success: false,
+                            message: "Không tìm thấy người dùng"
+                        };
                     const existing = yield transactionManager.findOne(TakeMoneyField_1.TakeMoneyField, {
                         where: {
                             id: takeMoneyFieldId
@@ -189,6 +169,10 @@ let MoneyBonusResolver = class MoneyBonusResolver {
                             success: false,
                             message: "Không tìm thấy id của yêu cầu"
                         };
+                    console.log(userExisting);
+                    console.log(existing);
+                    userExisting.moneyDepot += existing.money;
+                    yield transactionManager.save(userExisting);
                     yield transactionManager.delete(TakeMoneyField_1.TakeMoneyField, {
                         id: existing.id
                     });
@@ -199,6 +183,7 @@ let MoneyBonusResolver = class MoneyBonusResolver {
                     };
                 }
                 catch (error) {
+                    console.log(error);
                     return {
                         code: 500,
                         success: false,
@@ -209,14 +194,6 @@ let MoneyBonusResolver = class MoneyBonusResolver {
         });
     }
 };
-__decorate([
-    (0, type_graphql_1.Mutation)((_return) => MoneyBonusResponse_1.MoneyBonusResponse),
-    (0, type_graphql_1.UseMiddleware)(checkAdmin_1.checkAdmin),
-    __param(0, (0, type_graphql_1.Arg)("fieldInput")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [MoneyBonusInput_1.MoneyBonusInput]),
-    __metadata("design:returntype", Promise)
-], MoneyBonusResolver.prototype, "createMoneyField", null);
 __decorate([
     (0, type_graphql_1.Mutation)((_return) => SimpleResponse_1.SimpleResponse),
     (0, type_graphql_1.UseMiddleware)(checkAuth_1.checkAuth),
@@ -236,9 +213,11 @@ __decorate([
 ], MoneyBonusResolver.prototype, "getUserMoneyHistory", null);
 __decorate([
     (0, type_graphql_1.Mutation)((_return) => SimpleResponse_1.SimpleResponse),
+    (0, type_graphql_1.UseMiddleware)(checkAuth_1.checkAuth),
     __param(0, (0, type_graphql_1.Arg)("takeMoneyFieldId")),
+    __param(1, (0, type_graphql_1.Ctx)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, Object]),
     __metadata("design:returntype", Promise)
 ], MoneyBonusResolver.prototype, "userCancelTakeMoneyField", null);
 MoneyBonusResolver = __decorate([

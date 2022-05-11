@@ -2,7 +2,7 @@
 import { Field, ObjectType } from "type-graphql";
 import { BillProduct } from "../../entites/BillProduct";
 import { Brand } from "../../entites/Brand";
-import { ProductKind } from "../../entites/ProductKind";
+
 import { IResponse } from "./IResponse";
 
 @ObjectType({implements : IResponse})
@@ -15,8 +15,6 @@ export class WebDataResponse implements IResponse{
     @Field(_return =>[Brand],{nullable:true})
     brands?:Brand[]
 
-    @Field(_return =>[ProductKind],{nullable:true})
-    kinds?:ProductKind[]
 
     @Field(_return =>[BillProduct],{nullable:true})
     products?:BillProduct[]

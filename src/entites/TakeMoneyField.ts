@@ -31,17 +31,17 @@ export class TakeMoneyField
   cancelReason?: string;
 
   @Field()
-  @Column({type:"bigint"})
+  @Column()
   money:number
 
   @Field({nullable:true})
   @Column({nullable:true})
   isSuccessImage?:string
 
-  //true is chờ xử lý, false là hủy
-  @Field({defaultValue:true})
-  @Column({default:true})
-  isSuccess: boolean;
+
+  @Field({defaultValue:""})
+  @Column({default:""})
+  status: string;
 
   
   @Field(_return => User)

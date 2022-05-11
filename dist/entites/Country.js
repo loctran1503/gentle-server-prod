@@ -9,51 +9,36 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Brand = void 0;
+exports.Country = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Product_1 = require("./Product");
-const ProductClass_1 = require("./ProductClass");
-let Brand = class Brand extends typeorm_1.BaseEntity {
+const ProductKind_1 = require("./ProductKind");
+let Country = class Country extends typeorm_1.BaseEntity {
 };
 __decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.PrimaryGeneratedColumn)(),
     __metadata("design:type", Number)
-], Brand.prototype, "id", void 0);
+], Country.prototype, "id", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
-], Brand.prototype, "brandName", void 0);
+], Country.prototype, "countryName", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(),
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Brand.prototype, "thumbnail", void 0);
-__decorate([
-    (0, type_graphql_1.Field)({ nullable: true }),
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], Brand.prototype, "description", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(_return => [ProductClass_1.ProductClass]),
-    (0, typeorm_1.ManyToMany)(() => ProductClass_1.ProductClass),
-    (0, typeorm_1.JoinTable)(),
+    (0, type_graphql_1.Field)((_return) => [ProductKind_1.ProductKind], { nullable: true }),
+    (0, typeorm_1.ManyToOne)(() => ProductKind_1.ProductKind, kind => kind.countries, { nullable: true }),
     __metadata("design:type", Array)
-], Brand.prototype, "productClasses", void 0);
+], Country.prototype, "kind", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(_return => [Product_1.Product], { nullable: true }),
-    (0, typeorm_1.OneToMany)(() => Product_1.Product, product => product.brand, { nullable: true }),
+    (0, type_graphql_1.Field)((_return) => [Product_1.Product], { nullable: true }),
+    (0, typeorm_1.OneToMany)(() => Product_1.Product, (product) => product.country, { nullable: true }),
     __metadata("design:type", Array)
-], Brand.prototype, "products", void 0);
-Brand = __decorate([
+], Country.prototype, "products", void 0);
+Country = __decorate([
     (0, type_graphql_1.ObjectType)(),
-    (0, typeorm_1.Entity)({
-        orderBy: {
-            brandName: "ASC"
-        }
-    })
-], Brand);
-exports.Brand = Brand;
-//# sourceMappingURL=Brand.js.map
+    (0, typeorm_1.Entity)()
+], Country);
+exports.Country = Country;
+//# sourceMappingURL=Country.js.map

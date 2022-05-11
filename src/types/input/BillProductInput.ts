@@ -19,4 +19,7 @@ export class BillProductInput {
 
   @Field({nullable:true})
   priceIdForLocal?: number;
+
+  @Field({nullable:true})
+  countryNameForDeliveryPrice?: string;
 }

@@ -1,4 +1,3 @@
-import { dataSource } from "../data-source";
 import {
   Arg,
   Ctx,
@@ -7,9 +6,10 @@ import {
   Query,
   Resolver,
   Root,
-  UseMiddleware
+  UseMiddleware,
 } from "type-graphql";
 import { LessThan } from "typeorm";
+import { dataSource } from "../data-source";
 import { Bill } from "../entites/Bill";
 import { BillCancelReason } from "../entites/BillCancelReason";
 import { BillProduct } from "../entites/BillProduct";
@@ -25,9 +25,8 @@ import { Context } from "../types/others/Context";
 import { BillResponse } from "../types/response/BillResponse";
 import { CartProductResponse } from "../types/response/CartProductResponse";
 import { GiftResponse } from "../types/response/GiftResponse";
-import { IntroducePriceCaculater } from "../utils/IntroducePriceCaculater";
 import { MONEY_COMMENT_PERCENT, REJECTED_AMOUNT } from "../utils/constants";
-
+import { IntroducePriceCaculater } from "../utils/IntroducePriceCaculater";
 
 @Resolver((_of) => Bill)
 export class BillResolver {
@@ -52,8 +51,8 @@ export class BillResolver {
       }
     }
   }
-  @FieldResolver(_return => Number)
-  commentPrice(@Root() root : Bill){
+  @FieldResolver((_return) => Number)
+  commentPrice(@Root() root: Bill) {
     let totalPrice = root.billProducts.reduce(
       (prev, current) => prev + current.productAmount * current.productPrice,
       0
@@ -61,14 +60,14 @@ export class BillResolver {
     if (root.introduceCode) {
       totalPrice =
         totalPrice - IntroducePriceCaculater(totalPrice) + root.deliveryPrice;
-      return totalPrice * MONEY_COMMENT_PERCENT
+      return totalPrice * MONEY_COMMENT_PERCENT;
     } else {
       if (root.paymentDown > 0) {
         totalPrice = totalPrice + root.deliveryPrice - root.paymentDown;
-        return totalPrice * MONEY_COMMENT_PERCENT
+        return totalPrice * MONEY_COMMENT_PERCENT;
       } else {
         totalPrice = totalPrice + root.deliveryPrice;
-        return totalPrice * MONEY_COMMENT_PERCENT
+        return totalPrice * MONEY_COMMENT_PERCENT;
       }
     }
   }
@@ -97,16 +96,19 @@ export class BillResolver {
             where: {
               id: item.priceIdForLocal,
             },
-            relations: ["product"],
+            relations: ["product","product.country"],
           });
+          if (!price) throw Error("Something wrong!");
 
+          const realPrice = (price.price * (100 - price.salesPercent)) / 100;
           const billProduct = BillProduct.create({
-            productName: price!.product.productName,
-            productThumbnail: price!.product.thumbnail,
-            productType: price!.type,
-            productPrice: price!.price,
+            productName: price.product.productName,
+            productThumbnail: price.product.thumbnail,
+            productType: price.type,
+            productPrice: realPrice,
             productAmount: item.productAmount,
             priceIdForLocal: item.priceIdForLocal,
+            countryNameForDeliveryPrice:price.product.country.countryName
           });
           return billProduct;
         })
@@ -213,7 +215,7 @@ export class BillResolver {
     @Arg("billInput") billInput: BillInput,
     @Ctx() { user }: Context
   ): Promise<BillResponse> {
-    return await dataSource.transaction(async transactionManager =>{
+    return await dataSource.transaction(async (transactionManager) => {
       try {
         const {
           notice,
@@ -223,24 +225,27 @@ export class BillResolver {
           deliveryPrice,
           paymentType,
         } = billInput;
-  
-        const customerExisting = await transactionManager.findOne(Customer,{
+
+        const customerExisting = await transactionManager.findOne(Customer, {
           where: {
             customerPhone: customer.customerPhone,
           },
         });
-  
-        if (customerExisting && customerExisting.rejectedAmount > REJECTED_AMOUNT)
+
+        if (
+          customerExisting &&
+          customerExisting.rejectedAmount > REJECTED_AMOUNT
+        )
           return {
             code: 400,
             success: false,
             message: "numberphone is locked",
           };
-  
-        const newCustomer = transactionManager.create(Customer,{
+
+        const newCustomer = transactionManager.create(Customer, {
           ...customer,
         });
-  
+
         await transactionManager.save(newCustomer);
         const newBill = Bill.create({
           customer: newCustomer,
@@ -250,21 +255,21 @@ export class BillResolver {
         if (notice) {
           newBill.notice = notice;
         }
-  
+
         if (user !== undefined && user.userId !== undefined) {
-          const userExisting = await transactionManager.findOne(User,{
+          const userExisting = await transactionManager.findOne(User, {
             where: {
               id: user.userId,
             },
           });
-          if(userExisting) newBill.user = userExisting
+          if (userExisting) newBill.user = userExisting;
         }
         if (introduceCode) newBill.introduceCode = introduceCode;
-  
+
         await transactionManager.save(newBill);
         await Promise.all(
           products.map(async (product) => {
-            const newProduct = transactionManager.create(BillProduct,{
+            const newProduct = transactionManager.create(BillProduct, {
               productName: product.productName,
               productThumbnail: product.productThumbnail,
               productType: product.productType,
@@ -296,18 +301,21 @@ export class BillResolver {
           message: `Server error:${error.message}`,
         };
       }
-    })
+    });
   }
   @Mutation((_return) => BillResponse)
   @UseMiddleware(checkAuth)
-  async handleBillCancel(@Arg("billId") billId: number,@Arg("reason")reason :string): Promise<BillResponse> {
-    return await dataSource.transaction(async transactionManager =>{
+  async handleBillCancel(
+    @Arg("billId") billId: number,
+    @Arg("reason") reason: string
+  ): Promise<BillResponse> {
+    return await dataSource.transaction(async (transactionManager) => {
       try {
-        const billExisting = await transactionManager.findOne(Bill,{
+        const billExisting = await transactionManager.findOne(Bill, {
           where: {
             id: billId,
           },
-          relations:["customer"]
+          relations: ["customer"],
         });
         if (!billExisting)
           return {
@@ -328,13 +336,16 @@ export class BillResolver {
         //Everything ok
         billExisting.billStatus = BillStatusType.CANCEL;
         await transactionManager.save(billExisting);
-  
-        if(reason!==""){
-          const newBillCancelReason = transactionManager.create(BillCancelReason,{
-            reason,
-            customer:billExisting.customer
-          })
-          await transactionManager.save(newBillCancelReason)
+
+        if (reason !== "") {
+          const newBillCancelReason = transactionManager.create(
+            BillCancelReason,
+            {
+              reason,
+              customer: billExisting.customer,
+            }
+          );
+          await transactionManager.save(newBillCancelReason);
         }
         return {
           code: 200,
@@ -347,7 +358,6 @@ export class BillResolver {
           message: `Server error:${error.message}`,
         };
       }
-    })
+    });
   }
-
 }

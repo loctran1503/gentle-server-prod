@@ -31,13 +31,13 @@ __decorate([
     __metadata("design:type", String)
 ], ProductInput.prototype, "description", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Number)
-], ProductInput.prototype, "priceToDisplay", void 0);
-__decorate([
     (0, type_graphql_1.Field)(_return => [PriceInput_1.PriceInput]),
     __metadata("design:type", Array)
 ], ProductInput.prototype, "prices", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", String)
+], ProductInput.prototype, "countryName", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", Number)

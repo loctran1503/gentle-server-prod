@@ -9,6 +9,7 @@ import {
   PrimaryGeneratedColumn,
 } from "typeorm";
 import { Brand } from "./Brand";
+import { Country } from "./Country";
 import { Price } from "./Price";
 import { ProductClass } from "./ProductClass";
 import { ProductKind } from "./ProductKind";
@@ -22,7 +23,7 @@ export class Product extends BaseEntity {
   id!: number;
 
   @Field()
-  @Column({unique:true})
+  @Column()
   productName!: string;
 
   @Field()
@@ -73,6 +74,10 @@ export class Product extends BaseEntity {
   @Field(_return => ProductClass)
   @ManyToOne(() => ProductClass,item => item.products)
   class:ProductClass
+
+  @Field(_return => Country)
+  @ManyToOne(() =>Country,country => country.products)
+  country: Country;
 
   @Field()
   @CreateDateColumn()

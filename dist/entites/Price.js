@@ -31,6 +31,11 @@ __decorate([
     __metadata("design:type", Number)
 ], Price.prototype, "price", void 0);
 __decorate([
+    (0, type_graphql_1.Field)({ defaultValue: 0 }),
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], Price.prototype, "salesPercent", void 0);
+__decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.Column)(),
     __metadata("design:type", Number)

@@ -8,33 +8,28 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PriceInput = void 0;
+exports.PriceResolver = void 0;
+const Price_1 = require("../entites/Price");
 const type_graphql_1 = require("type-graphql");
-let PriceInput = class PriceInput {
+let PriceResolver = class PriceResolver {
+    priceAfterDiscount(root) {
+        const price = root.price * ((100 - root.salesPercent) / 100);
+        return price;
+    }
 };
 __decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", String)
-], PriceInput.prototype, "type", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Number)
-], PriceInput.prototype, "price", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
-    __metadata("design:type", Number)
-], PriceInput.prototype, "status", void 0);
-__decorate([
-    (0, type_graphql_1.Field)({ defaultValue: 0 }),
-    __metadata("design:type", Number)
-], PriceInput.prototype, "salesPercent", void 0);
-__decorate([
-    (0, type_graphql_1.Field)({ nullable: true }),
-    __metadata("design:type", Boolean)
-], PriceInput.prototype, "isGift", void 0);
-PriceInput = __decorate([
-    (0, type_graphql_1.InputType)()
-], PriceInput);
-exports.PriceInput = PriceInput;
-//# sourceMappingURL=PriceInput.js.map
+    (0, type_graphql_1.FieldResolver)((_return) => Number),
+    __param(0, (0, type_graphql_1.Root)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Price_1.Price]),
+    __metadata("design:returntype", void 0)
+], PriceResolver.prototype, "priceAfterDiscount", null);
+PriceResolver = __decorate([
+    (0, type_graphql_1.Resolver)((_of) => Price_1.Price)
+], PriceResolver);
+exports.PriceResolver = PriceResolver;
+//# sourceMappingURL=PriceResolver.js.map

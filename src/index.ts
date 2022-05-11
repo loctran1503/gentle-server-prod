@@ -26,7 +26,7 @@ const main = async () => {
   app.use(
     cors({
       origin: __prod__
-        ? "https://gentlevn.com"
+        ? "https://gentlevn.com" || "https://www.gentlevn.com"
         : process.env.CORS_ORIGIN_DEV,
       credentials: true,
     })

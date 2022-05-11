@@ -37,6 +37,10 @@ __decorate([
     (0, type_graphql_1.Field)({ nullable: true }),
     __metadata("design:type", Number)
 ], BillProductInput.prototype, "priceIdForLocal", void 0);
+__decorate([
+    (0, type_graphql_1.Field)({ nullable: true }),
+    __metadata("design:type", String)
+], BillProductInput.prototype, "countryNameForDeliveryPrice", void 0);
 BillProductInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], BillProductInput);

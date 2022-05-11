@@ -3,8 +3,6 @@ import { Field, InputType } from "type-graphql";
 
 @InputType()
 export class BrandInput{
-    @Field()
-    kindId:number
 
     @Field()
     brandName:string
@@ -12,8 +10,7 @@ export class BrandInput{
     @Field()
     thumbnail:string
 
-    @Field()
-    description:string
+  
 
     @Field()
     productClassId:number

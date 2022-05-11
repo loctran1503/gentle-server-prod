@@ -26,7 +26,6 @@ const BrandResponse_1 = require("../types/response/BrandResponse");
 const type_graphql_1 = require("type-graphql");
 const BrandInput_1 = require("../types/input/BrandInput");
 const Brand_1 = require("../entites/Brand");
-const ProductKind_1 = require("../entites/ProductKind");
 const ProductClass_1 = require("../entites/ProductClass");
 const PaginationBrandWithProductsResponse_1 = require("../types/response/PaginationBrandWithProductsResponse");
 const SearchOptionsInput_1 = require("../types/input/SearchOptionsInput");
@@ -34,32 +33,6 @@ const constants_1 = require("../utils/constants");
 const Product_1 = require("../entites/Product");
 const data_source_1 = require("../data-source");
 let BrandResolver = class BrandResolver {
-    getBrands(kindId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                const brands = yield Brand_1.Brand.find({
-                    where: {
-                        kind: {
-                            id: kindId,
-                        },
-                    },
-                    relations: ["kind"],
-                });
-                return {
-                    code: 200,
-                    success: true,
-                    brands,
-                };
-            }
-            catch (error) {
-                return {
-                    code: 500,
-                    success: false,
-                    message: error.message,
-                };
-            }
-        });
-    }
     getBrandWithProducts(paginationOptions) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -68,12 +41,12 @@ let BrandResolver = class BrandResolver {
                     where: {
                         id: brandId,
                     },
-                    relations: ["productClasses", "kind"]
+                    relations: ["productClasses"],
                 });
                 const option = {
                     take: constants_1.PRODUCT_LIMIT_PER_PAGE,
                     skip,
-                    relations: ["comments", "class"],
+                    relations: ["comments", "class", "prices"],
                     where: {
                         brand: {
                             id: brandId,
@@ -85,7 +58,7 @@ let BrandResolver = class BrandResolver {
                         brand: {
                             id: brandId,
                         },
-                    }
+                    },
                 };
                 if (productClassId && productClassId !== 0) {
                     option.where = {
@@ -126,6 +99,11 @@ let BrandResolver = class BrandResolver {
                             sales: "DESC",
                         };
                         break;
+                    case "DISCOUNT_DESC":
+                        option.order = {
+                            salesPercent: "DESC",
+                        };
+                        break;
                     default:
                         break;
                 }
@@ -134,7 +112,7 @@ let BrandResolver = class BrandResolver {
                     return {
                         code: 400,
                         success: false,
-                        message: "Products not found"
+                        message: "Products not found",
                     };
                 brandWithProducts.products = products;
                 const totalCount = yield Product_1.Product.count(totalCountOptions);
@@ -164,25 +142,14 @@ let BrandResolver = class BrandResolver {
             }
         });
     }
-    adminCreateBrand({ brandName, thumbnail, description, kindId, productClassId }) {
+    adminCreateBrand({ brandName, thumbnail, productClassId }) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    const kindExisting = yield transactionManager.findOne(ProductKind_1.ProductKind, {
-                        where: {
-                            id: kindId,
-                        },
-                    });
-                    if (!kindExisting)
-                        return {
-                            code: 400,
-                            success: false,
-                            message: "ProductKind not found",
-                        };
                     const productClass = yield transactionManager.findOne(ProductClass_1.ProductClass, {
                         where: {
-                            id: productClassId
-                        }
+                            id: productClassId,
+                        },
                     });
                     if (!productClass)
                         return {
@@ -193,9 +160,7 @@ let BrandResolver = class BrandResolver {
                     const newBrand = transactionManager.create(Brand_1.Brand, {
                         brandName,
                         thumbnail,
-                        description,
-                        kind: kindExisting,
-                        productClasses: [productClass]
+                        productClasses: [productClass],
                     });
                     yield transactionManager.save(newBrand);
                     return {
@@ -214,13 +179,6 @@ let BrandResolver = class BrandResolver {
         });
     }
 };
-__decorate([
-    (0, type_graphql_1.Query)((_return) => BrandResponse_1.BrandResponse),
-    __param(0, (0, type_graphql_1.Arg)("kindId")),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
-], BrandResolver.prototype, "getBrands", null);
 __decorate([
     (0, type_graphql_1.Query)((_return) => PaginationBrandWithProductsResponse_1.PaginationBrandWithProductsResponse),
     __param(0, (0, type_graphql_1.Arg)("paginationOptions")),

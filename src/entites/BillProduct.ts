@@ -34,9 +34,13 @@ export class BillProduct
   @Column()
   productAmount: number;
 
-  @Field({nullable:true})
   @Column({nullable:true})
-  priceIdForLocal: number;
+  @Field({nullable:true})
+  priceIdForLocal?: number;
+
+  @Column({nullable:true})
+  @Field({nullable:true})
+  countryNameForDeliveryPrice?: string;
 
   @Field(_return => Bill)
   @ManyToOne(() =>Bill,item => item.billProducts)

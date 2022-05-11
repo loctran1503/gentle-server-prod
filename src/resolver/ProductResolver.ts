@@ -25,7 +25,16 @@ import { PaginationProductsResponse } from "../types/response/PaginationProducts
 import { PaginationUsersResponse } from "../types/response/PaginationUsersResponse";
 import { ProductKindResponse } from "../types/response/ProductKindResponse";
 import { ProductResponse } from "../types/response/ProductResponse";
-import { PRODUCT_LIMIT_PER_PAGE, USER_LIMIT } from "../utils/constants";
+import {
+  KOREA,
+  KOREA_INFO,
+  PRODUCT_LIMIT_PER_PAGE,
+  USER_LIMIT,
+  AMERICA,
+  AMERICA_INFO,
+  VIETNAM,
+  VIETNAM_INFO,
+} from "../utils/constants";
 import ProductManager from "../utils/ProductWasPaidCount";
 import { WebDataResponse } from "../types/response/WebDataResponse";
 import { BillProductInput } from "../types/input/BillProductInput";
@@ -34,6 +43,7 @@ import { Context } from "../types/others/Context";
 import { getUserId } from "../middleware/getUserId";
 import { createToken } from "../utils/auth";
 import { Admin } from "../entites/Admin";
+import { Country } from "../entites/Country";
 
 @Resolver((_of) => Product)
 export class ProductResolver {
@@ -51,7 +61,9 @@ export class ProductResolver {
   minPrice(@Root() root: Product) {
     const min = Math.min.apply(
       Math,
-      root.prices.map((price) => price.price)
+      root.prices.map(
+        (price) => price.price * ((100 - price.salesPercent) / 100)
+      )
     );
     return min;
   }
@@ -59,9 +71,33 @@ export class ProductResolver {
   maxPrice(@Root() root: Product) {
     const max = Math.max.apply(
       Math,
-      root.prices.map((price) => price.price)
+      root.prices.map(
+        (price) => price.price * ((100 - price.salesPercent) / 100)
+      )
     );
     return max;
+  }
+  @FieldResolver((_return) => Number)
+  priceAfterDiscount(@Root() root: Product) {
+    if (root.salesPercent > 0) {
+      const price = root.priceToDisplay * ((100 - root.salesPercent) / 100);
+      return price;
+    } else {
+      return root.priceToDisplay;
+    }
+  }
+  @FieldResolver((_return) => [String])
+  otherInfo(@Root() root: Product) {
+    switch (root.country.countryName) {
+      case AMERICA:
+        return AMERICA_INFO;
+      case KOREA:
+        return KOREA_INFO;
+      case VIETNAM:
+        return VIETNAM_INFO;
+      default:
+        return [];
+    }
   }
   @FieldResolver((_return) => [String])
   imageList(@Root() root: Product) {
@@ -95,11 +131,13 @@ export class ProductResolver {
           imgDescription,
           description,
           prices,
-          priceToDisplay,
+
           brandId,
           sales,
           kindId,
           classId,
+
+          countryName,
         } = productInput;
 
         const brandExisting = await transactionManager.findOne(Brand, {
@@ -117,32 +155,69 @@ export class ProductResolver {
             id: classId,
           },
         });
-
-        if (!brandExisting || !kindExisting || !classExisting)
+        const country = await transactionManager.findOne(Country, {
+          where: {
+            countryName,
+          },
+        });
+        if (!brandExisting)
           return {
             code: 400,
             success: false,
-            message: "Brand or kind or class not found",
+            message: "Brand  not found",
           };
+        if (!kindExisting)
+          return {
+            code: 400,
+            success: false,
+            message: "kind  not found",
+          };
+        if (!classExisting)
+          return {
+            code: 400,
+            success: false,
+            message: " class  not found",
+          };
+        if (!country)
+          return {
+            code: 400,
+            success: false,
+            message: "country not found",
+          };
+
+        const totalPrice = prices.reduce(
+          (prev, current) => prev + current.price,
+
+          0
+        );
+        const salesPercent = Math.max.apply(
+          Math,
+          prices.map((price) => price.salesPercent)
+        );
 
         const newProduct = transactionManager.create(Product, {
           productName,
           thumbnail,
           imgDescription,
           description,
-          priceToDisplay,
+          priceToDisplay: Math.floor(totalPrice / prices.length),
           brand: brandExisting,
           kind: kindExisting,
           class: classExisting,
+          sales: sales || 0,
+          country: country,
+          salesPercent: salesPercent || 0,
         });
-        if (sales) newProduct.sales = sales;
         await transactionManager.save(newProduct);
 
         if (prices) {
           await Promise.all(
             prices.map(async (price) => {
               const newPrice = transactionManager.create(Price, {
-                ...price,
+                type: price.type,
+                price: price.price,
+                salesPercent: price.salesPercent,
+                status: price.status,
                 product: newProduct,
               });
               await transactionManager.save(newPrice);
@@ -182,6 +257,7 @@ export class ProductResolver {
           "prices",
           "brand",
           "kind",
+          "country",
         ],
       });
       if (product) {
@@ -202,62 +278,6 @@ export class ProductResolver {
         code: 500,
         success: false,
         message: error.message,
-      };
-    }
-  }
-
-  // Get All Product
-  @Query((_return) => PaginationProductsResponse)
-  async getProducts(
-    @Arg("paginationOptions") paginationOptions: PaginationOptionsInput
-  ): Promise<PaginationProductsResponse> {
-    try {
-      const { skip, type } = paginationOptions;
-      const option: { [key: string]: any } = {
-        take: PRODUCT_LIMIT_PER_PAGE,
-        skip,
-        relations: ["comments", "prices"],
-      };
-
-      switch (type) {
-        case "PRICE_DESC":
-          option.order = {
-            priceToDisplay: "DESC",
-          };
-          break;
-        case "PRICE_ASC":
-          option.order = {
-            priceToDisplay: "ASC",
-          };
-          break;
-        case "DATE_DESC":
-          option.order = {
-            createdAt: "DESC",
-          };
-          break;
-        case "SALES_DESC":
-          option.order = {
-            sales: "DESC",
-          };
-          break;
-        default:
-          break;
-      }
-
-      const products = await Product.find(option);
-      const totalCount = await Product.count();
-      return {
-        code: 200,
-        success: true,
-        totalCount,
-        pageSize: PRODUCT_LIMIT_PER_PAGE,
-        products,
-      };
-    } catch (error) {
-      return {
-        code: 500,
-        success: false,
-        message: `Server error:${error.message}`,
       };
     }
   }
@@ -381,11 +401,20 @@ export class ProductResolver {
   }
   @Query((_return) => ProductKindResponse)
   async getProductsForIndex(
-    @Arg("take") take: number
+ 
+    @Arg("countryName") countryName: string
   ): Promise<ProductKindResponse> {
     try {
-      const realTake = Math.min(6, take);
-      const kinds = await ProductKind.find();
+      const realTake = 10
+      const kinds = await ProductKind.find({
+        where: {
+          countries: {
+            countryName,
+          },
+          products: !null,
+        },
+        relations: ["countries", "products"],
+      });
       const res: ProductKindResponse = await Promise.all(
         kinds.map(async (item) => {
           item.products = await Product.find({
@@ -393,12 +422,16 @@ export class ProductResolver {
               kind: {
                 id: item.id,
               },
+              country: {
+                countryName,
+              },
             },
             order: {
               sales: "DESC",
+              salesPercent:"DESC"
             },
             take: realTake,
-            relations: ["kind", "class", "comments"],
+            relations: ["comments", "country", "prices", "class"],
           });
           return item;
         })
@@ -429,12 +462,13 @@ export class ProductResolver {
   }
   @Query((_return) => PaginationProductsResponse)
   async getProductsByKind(
-    @Arg("paginationOptions") paginationOptions: PaginationOptionsInput
+    @Arg("paginationOptions") paginationOptions: PaginationOptionsInput,
+    @Arg("countryName") countryName: string
   ): Promise<PaginationProductsResponse> {
     try {
       const { skip, type, kindId, productClassId } = paginationOptions;
 
-      const option: { [key: string]: any } = {
+      const findProductsOption: { [key: string]: any } = {
         take: PRODUCT_LIMIT_PER_PAGE,
         skip,
         relations: ["comments", "class", "prices"],
@@ -442,54 +476,71 @@ export class ProductResolver {
           kind: {
             id: kindId,
           },
+          country: {
+            countryName,
+          },
         },
       };
-      const totalCountOptions: { [key: string]: any } = {
+      const totalCountProductOptions: { [key: string]: any } = {
         where: {
           kind: {
             id: kindId,
+          },
+          country: {
+            countryName,
           },
         },
       };
 
       if (productClassId && productClassId !== 0) {
-        option.where = {
+        findProductsOption.where = {
           kind: {
             id: kindId,
           },
           class: {
             id: productClassId,
+          },
+          country: {
+            countryName,
           },
         };
-        totalCountOptions.where = {
+        totalCountProductOptions.where = {
           kind: {
             id: kindId,
           },
           class: {
             id: productClassId,
+          },
+          country: {
+            countryName,
           },
         };
       }
 
       switch (type) {
         case "PRICE_DESC":
-          option.order = {
+          findProductsOption.order = {
             priceToDisplay: "DESC",
           };
           break;
         case "PRICE_ASC":
-          option.order = {
+          findProductsOption.order = {
             priceToDisplay: "ASC",
           };
           break;
         case "DATE_DESC":
-          option.order = {
+          findProductsOption.order = {
             createdAt: "DESC",
           };
           break;
         case "SALES_DESC":
-          option.order = {
+          findProductsOption.order = {
             sales: "DESC",
+          };
+          break;
+        case "DISCOUNT_DESC":
+          findProductsOption.order = {
+            salesPercent: "DESC",
           };
           break;
         default:
@@ -507,9 +558,9 @@ export class ProductResolver {
           message: "Kind not found",
         };
 
-      const products = await Product.find(option);
+      const products = await Product.find(findProductsOption);
 
-      const totalCount = await Product.count(totalCountOptions);
+      const totalCount = await Product.count(totalCountProductOptions);
       const productClasses = await ProductClass.find({
         where: {
           kind: {
@@ -581,73 +632,69 @@ export class ProductResolver {
             productPrice: price.price,
             productAmount: item.productAmount,
             priceIdForLocal: item.priceIdForLocal,
+            countryNameForDeliveryPrice: item.countryNameForDeliveryPrice,
           });
+
           return billProduct;
         })
       ).then((list) => {
         return list;
       });
-      const kinds = await ProductKind.find();
-      const brands = await Brand.find();
-   
-      if (user.userId!==undefined) {
-    
-        const adminExisting = await Admin.findOne({
-          where:{
-            id:user.userId
-          }
-        })
-        if(adminExisting){
 
+      const brands = await Brand.find();
+      if(user){
+        const adminExisting = await Admin.findOne({
+          where: {
+            id: user.userId,
+          },
+        });
+        if (adminExisting) {
           return {
             code: 200,
             success: true,
             products,
-            kinds,
             brands,
             avatar: adminExisting.avatar,
             token: createToken("accessToken", adminExisting.id.toString()),
-            type:"admin"
+            type: "admin",
           };
-
-        }else{
+        } else {
           const userExisting = await User.findOne({
             where: {
-              id: +user.userId,
+              id: user.userId,
             },
           });
-       
+  
           if (userExisting) {
             return {
               code: 200,
               success: true,
               products,
-              kinds,
+  
               brands,
               avatar: userExisting.userAvatar,
               token: createToken("accessToken", userExisting.id.toString()),
-              type:"user",
-              isHidden:userExisting.isHidden
+              type: "user",
+              isHidden: userExisting.isHidden,
             };
           } else {
             return {
-              code: 400,
-              success: false,
-              message: "User not found",
+              code: 999,
+              success: true,
+              products,
+              brands,
             };
           }
         }
-
-        
-      } else {
+      }else{
         return {
-          code: 200,
+          code: 999,
           success: true,
           products,
-          kinds,
           brands,
         };
       }
+      
     } catch (error) {
       return {
         code: 500,

@@ -33,7 +33,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({
         origin: constants_1.__prod__
-            ? "https://gentlevn.com"
+            ? "https://gentlevn.com" || "https://www.gentlevn.com"
             : process.env.CORS_ORIGIN_DEV,
         credentials: true,
     }));

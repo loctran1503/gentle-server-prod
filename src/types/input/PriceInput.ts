@@ -11,6 +11,9 @@ export class PriceInput{
     @Field()
     status!:number
 
+    @Field({defaultValue:0})
+    salesPercent:number
+
     @Field({nullable:true})
     isGift?:boolean
 }

@@ -24,6 +24,10 @@ export class Price extends BaseEntity {
   @Column()
   price!: number;
 
+  @Field({defaultValue:0})
+  @Column({default:0})
+  salesPercent: number;
+
   @Field()
   @Column()
   status!: number;

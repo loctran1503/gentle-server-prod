@@ -13,7 +13,6 @@ exports.WebDataResponse = void 0;
 const type_graphql_1 = require("type-graphql");
 const BillProduct_1 = require("../../entites/BillProduct");
 const Brand_1 = require("../../entites/Brand");
-const ProductKind_1 = require("../../entites/ProductKind");
 const IResponse_1 = require("./IResponse");
 let WebDataResponse = class WebDataResponse {
 };
@@ -21,10 +20,6 @@ __decorate([
     (0, type_graphql_1.Field)(_return => [Brand_1.Brand], { nullable: true }),
     __metadata("design:type", Array)
 ], WebDataResponse.prototype, "brands", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(_return => [ProductKind_1.ProductKind], { nullable: true }),
-    __metadata("design:type", Array)
-], WebDataResponse.prototype, "kinds", void 0);
 __decorate([
     (0, type_graphql_1.Field)(_return => [BillProduct_1.BillProduct], { nullable: true }),
     __metadata("design:type", Array)

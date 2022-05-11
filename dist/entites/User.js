@@ -53,6 +53,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User.prototype, "isHidden", void 0);
 __decorate([
+    (0, type_graphql_1.Field)({ defaultValue: 0 }),
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], User.prototype, "moneyDepot", void 0);
+__decorate([
     (0, type_graphql_1.Field)(_return => [Bill_1.Bill], { nullable: true }),
     (0, typeorm_1.OneToMany)(() => Bill_1.Bill, bill => bill.user, { nullable: true }),
     __metadata("design:type", Array)

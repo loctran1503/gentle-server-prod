@@ -31,7 +31,6 @@ const User_1 = require("../entites/User");
 const UserComment_1 = require("../entites/UserComment");
 const checkAuth_1 = require("../middleware/checkAuth");
 const CommentInput_1 = require("../types/input/CommentInput");
-const MoneyBonusType_1 = require("../types/others/MoneyBonusType");
 const CommentResponse_1 = require("../types/response/CommentResponse");
 const IntroducePriceCaculater_1 = require("../utils/IntroducePriceCaculater");
 const MoneyConverter_1 = require("../utils/MoneyConverter");
@@ -115,11 +114,12 @@ let CommentResolver = class CommentResolver {
                             totalPrice = totalPrice + billExisting.deliveryPrice;
                         }
                         const newFieldMoneyBonus = transactionManager.create(MoneyBonus_1.MoneyBonus, {
-                            description: `Bạn vừa nhận được ${(0, MoneyConverter_1.MoneyConverter)((0, IntroducePriceCaculater_1.CommentPriceCaculater)(totalPrice))} từ bình luận của bạn, Cảm ơn bạn đã đóng góp ý kiến , Chúc bạn có một ngày vui vẻ và tràn đầy năng lượng`,
+                            description: `Bạn vừa nhận được ${(0, MoneyConverter_1.MoneyConverter)((0, IntroducePriceCaculater_1.CommentPriceCaculater)(totalPrice))} từ bình luận của bạn.`,
                             moneyNumber: (0, IntroducePriceCaculater_1.CommentPriceCaculater)(totalPrice),
-                            type: MoneyBonusType_1.MoneyBonusType.GET,
                             user: userExisting,
                         });
+                        userExisting.moneyDepot += (0, IntroducePriceCaculater_1.CommentPriceCaculater)(totalPrice);
+                        yield transactionManager.save(userExisting);
                         yield transactionManager.save(newFieldMoneyBonus);
                         billExisting.isCommented = true;
                         yield transactionManager.save(billExisting);

@@ -7,8 +7,9 @@ const getUserId = ({ context }, next) => {
     try {
         const authHeader = context.req.header("Authorization");
         const token = authHeader && authHeader.split(" ")[1];
-        if (!token)
+        if (!token) {
             return next();
+        }
         const decodeUser = (0, jsonwebtoken_1.verify)(token, process.env.ACCESS_TOKEN_SECRET);
         context.user = decodeUser;
         return next();

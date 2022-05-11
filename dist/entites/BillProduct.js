@@ -46,10 +46,15 @@ __decorate([
     __metadata("design:type", Number)
 ], BillProduct.prototype, "productAmount", void 0);
 __decorate([
-    (0, type_graphql_1.Field)({ nullable: true }),
     (0, typeorm_1.Column)({ nullable: true }),
+    (0, type_graphql_1.Field)({ nullable: true }),
     __metadata("design:type", Number)
 ], BillProduct.prototype, "priceIdForLocal", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    (0, type_graphql_1.Field)({ nullable: true }),
+    __metadata("design:type", String)
+], BillProduct.prototype, "countryNameForDeliveryPrice", void 0);
 __decorate([
     (0, type_graphql_1.Field)(_return => Bill_1.Bill),
     (0, typeorm_1.ManyToOne)(() => Bill_1.Bill, item => item.billProducts),

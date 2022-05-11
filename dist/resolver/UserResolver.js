@@ -30,7 +30,6 @@ const checkAuth_1 = require("../middleware/checkAuth");
 const getUserId_1 = require("../middleware/getUserId");
 const AuthInput_1 = require("../types/input/AuthInput");
 const BillStatusType_1 = require("../types/others/BillStatusType");
-const MoneyBonusType_1 = require("../types/others/MoneyBonusType");
 const PaginationUsersResponse_1 = require("../types/response/PaginationUsersResponse");
 const SimpleResponse_1 = require("../types/response/SimpleResponse");
 const UserResponse_1 = require("../types/response/UserResponse");
@@ -54,28 +53,6 @@ let UserResolver = class UserResolver {
     cancelCount(root) {
         var _a;
         return (_a = root.bills) === null || _a === void 0 ? void 0 : _a.filter((item) => item.billStatus === BillStatusType_1.BillStatusType.CANCEL).length;
-    }
-    moneyCount(root) {
-        var _a, _b;
-        const totalMoneyGet = (_a = root.moneyBonuses) === null || _a === void 0 ? void 0 : _a.reduce((prev, current) => {
-            if (current.type === MoneyBonusType_1.MoneyBonusType.GET) {
-                return (prev += +current.moneyNumber);
-            }
-            else
-                return prev;
-        }, 0);
-        const totalMoneyTake = (_b = root.moneyBonuses) === null || _b === void 0 ? void 0 : _b.reduce((prev, current) => {
-            if (current.type === MoneyBonusType_1.MoneyBonusType.TAKE)
-                return (prev += +current.moneyNumber);
-            else
-                return prev;
-        }, 0);
-        if (totalMoneyGet !== undefined && totalMoneyTake !== undefined)
-            return totalMoneyGet - totalMoneyTake;
-        else if (totalMoneyGet !== undefined && totalMoneyGet === undefined)
-            return totalMoneyGet;
-        else
-            return 0;
     }
     getUser(context) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -120,29 +97,18 @@ let UserResolver = class UserResolver {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
                     const userId = authInput.userId;
-                    if (authInput.userId ===
-                        "lc0woETn6BO0dOCcPwo3ssNbdln2") {
-                        const admin = yield transactionManager.findOne(Admin_1.Admin, {
-                            where: {
-                                adminId: userId,
-                            },
-                        });
-                        if (admin) {
-                            return {
-                                code: 200,
-                                success: true,
-                                message: "Admin Login successfully!",
-                                token: (0, auth_1.createToken)("accessToken", admin.id.toString()),
-                            };
-                        }
-                        else {
-                            const newAdmin = transactionManager.create(Admin_1.Admin, {
-                                adminId: authInput.userId,
-                                adminName: "GENTLE",
-                                avatar: authInput.userAvartar,
-                            });
-                            yield transactionManager.save(newAdmin);
-                        }
+                    const admin = yield transactionManager.findOne(Admin_1.Admin, {
+                        where: {
+                            adminId: userId,
+                        },
+                    });
+                    if (admin) {
+                        return {
+                            code: 200,
+                            success: true,
+                            message: "Admin Login successfully!",
+                            token: (0, auth_1.createToken)("accessToken", admin.id.toString()),
+                        };
                     }
                     else {
                         const user = yield transactionManager.findOne(User_1.User, {
@@ -398,13 +364,6 @@ __decorate([
     __metadata("design:paramtypes", [User_1.User]),
     __metadata("design:returntype", void 0)
 ], UserResolver.prototype, "cancelCount", null);
-__decorate([
-    (0, type_graphql_1.FieldResolver)((_return) => Number),
-    __param(0, (0, type_graphql_1.Root)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [User_1.User]),
-    __metadata("design:returntype", Number)
-], UserResolver.prototype, "moneyCount", null);
 __decorate([
     (0, type_graphql_1.Query)((_return) => UserResponse_1.UserResponse),
     (0, type_graphql_1.UseMiddleware)(checkAuth_1.checkAuth),

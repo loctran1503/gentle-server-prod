@@ -25,6 +25,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminResolver = void 0;
+const Country_1 = require("../entites/Country");
 const type_graphql_1 = require("type-graphql");
 const data_source_1 = require("../data-source");
 const Admin_1 = require("../entites/Admin");
@@ -44,7 +45,6 @@ const checkAdmin_1 = require("../middleware/checkAdmin");
 const FeedbackInput_1 = require("../types/input/FeedbackInput");
 const PriceInput_1 = require("../types/input/PriceInput");
 const BillStatusType_1 = require("../types/others/BillStatusType");
-const MoneyBonusType_1 = require("../types/others/MoneyBonusType");
 const DashboardResponse_1 = require("../types/response/admin/DashboardResponse");
 const KindBrandClassResponse_1 = require("../types/response/admin/KindBrandClassResponse");
 const PriceResponse_1 = require("../types/response/admin/PriceResponse");
@@ -58,6 +58,7 @@ const auth_1 = require("../utils/auth");
 const IntroducePriceCaculater_1 = require("../utils/IntroducePriceCaculater");
 const MoneyConverter_1 = require("../utils/MoneyConverter");
 const ProductWasPaidCount_1 = __importDefault(require("../utils/ProductWasPaidCount"));
+const TakeMoneyFieldType_1 = require("../types/others/TakeMoneyFieldType");
 let AdminResolver = class AdminResolver {
     createAdmin(adminId, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -105,19 +106,17 @@ let AdminResolver = class AdminResolver {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    const productKindExisting = yield transactionManager.findOne(ProductKind_1.ProductKind, {
-                        where: {
-                            name,
-                        },
-                    });
-                    if (productKindExisting)
+                    const countries = yield Country_1.Country.find();
+                    if (!countries) {
                         return {
                             code: 400,
                             success: false,
-                            message: "Productkind already have",
+                            message: "Country not found"
                         };
+                    }
                     const newProductKind = transactionManager.create(ProductKind_1.ProductKind, {
                         name,
+                        countries
                     });
                     yield transactionManager.save(newProductKind);
                     return {
@@ -139,17 +138,6 @@ let AdminResolver = class AdminResolver {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
-                    const productClassExisting = yield transactionManager.findOne(ProductClass_1.ProductClass, {
-                        where: {
-                            name,
-                        },
-                    });
-                    if (productClassExisting)
-                        return {
-                            code: 400,
-                            success: false,
-                            message: "ProductClass already have",
-                        };
                     const productKindExisting = yield transactionManager.findOne(ProductKind_1.ProductKind, {
                         where: {
                             id,
@@ -198,7 +186,7 @@ let AdminResolver = class AdminResolver {
                     };
                     const takeMoneyField = yield transactionEntityManager.count(TakeMoneyField_1.TakeMoneyField, {
                         where: {
-                            isSuccess: true,
+                            status: TakeMoneyFieldType_1.TakeMoneyFieldType.PENDING,
                         },
                     });
                     if (takeMoneyField > 0)
@@ -262,9 +250,7 @@ let AdminResolver = class AdminResolver {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
                     const kinds = yield transactionManager.find(ProductKind_1.ProductKind);
-                    const brands = yield transactionManager.find(Brand_1.Brand, {
-                        relations: ["kind"],
-                    });
+                    const brands = yield transactionManager.find(Brand_1.Brand);
                     const classes = yield transactionManager.find(ProductClass_1.ProductClass, {
                         relations: ["kind"],
                     });
@@ -321,7 +307,7 @@ let AdminResolver = class AdminResolver {
             try {
                 const fields = yield TakeMoneyField_1.TakeMoneyField.find({
                     where: {
-                        isSuccess: true,
+                        status: TakeMoneyFieldType_1.TakeMoneyFieldType.PENDING,
                     },
                     relations: ["user", "user.moneyBonuses"],
                 });
@@ -378,7 +364,7 @@ let AdminResolver = class AdminResolver {
             }
         });
     }
-    adminTakeMoneyFieldCompleted(fieldId) {
+    adminTakeMoneyFieldCompleted(fieldId, imageSuccess) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
                 try {
@@ -394,13 +380,9 @@ let AdminResolver = class AdminResolver {
                             success: false,
                             message: "TakeMoneyField not found",
                         };
-                    const newFieldMoneyBonus = transactionManager.create(MoneyBonus_1.MoneyBonus, {
-                        moneyNumber: fieldExisting.money,
-                        description: "Rút tiền",
-                        type: MoneyBonusType_1.MoneyBonusType.TAKE,
-                        user: fieldExisting.user,
-                    });
-                    yield transactionManager.save(newFieldMoneyBonus);
+                    fieldExisting.isSuccessImage = imageSuccess;
+                    fieldExisting.status = TakeMoneyFieldType_1.TakeMoneyFieldType.SUCCESS;
+                    yield transactionManager.save(fieldExisting);
                     return {
                         code: 200,
                         success: true,
@@ -427,13 +409,27 @@ let AdminResolver = class AdminResolver {
                         },
                         relations: ["user"],
                     });
+                    const userExisting = yield transactionManager.findOne(User_1.User, {
+                        where: {
+                            id: fieldExisting === null || fieldExisting === void 0 ? void 0 : fieldExisting.user.id
+                        }
+                    });
                     if (!fieldExisting)
                         return {
                             code: 400,
                             success: false,
                             message: "TakeMoneyField not found",
                         };
-                    fieldExisting.isSuccess = false;
+                    if (!userExisting) {
+                        return {
+                            code: 400,
+                            success: false,
+                            message: "User not found"
+                        };
+                    }
+                    userExisting.moneyDepot += fieldExisting.money;
+                    yield transactionManager.save(userExisting);
+                    fieldExisting.status = TakeMoneyFieldType_1.TakeMoneyFieldType.FAIL;
                     fieldExisting.cancelReason = cancelReason;
                     yield transactionManager.save(fieldExisting);
                     return {
@@ -592,10 +588,11 @@ let AdminResolver = class AdminResolver {
                             };
                         const newFieldMoneyBonus = transactionManager.create(MoneyBonus_1.MoneyBonus, {
                             description: `Bạn vừa nhận được ${(0, MoneyConverter_1.MoneyConverter)((0, IntroducePriceCaculater_1.IntroducePriceCaculater)(totalPrice))} từ mã giới thiệu`,
-                            moneyNumber: totalPrice,
-                            type: MoneyBonusType_1.MoneyBonusType.GET,
+                            moneyNumber: (0, IntroducePriceCaculater_1.IntroducePriceCaculater)(totalPrice),
                             user: userExisting,
                         });
+                        userExisting.moneyDepot += (0, IntroducePriceCaculater_1.IntroducePriceCaculater)(totalPrice);
+                        yield transactionManager.save(userExisting);
                         yield transactionManager.save(newFieldMoneyBonus);
                         return {
                             code: 200,
@@ -704,11 +701,28 @@ let AdminResolver = class AdminResolver {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const items = yield ProductKind_1.ProductKind.find();
-                const classes = yield ProductClass_1.ProductClass.find();
                 return {
                     code: 200,
                     success: true,
                     kinds: items,
+                };
+            }
+            catch (error) {
+                return {
+                    code: 500,
+                    success: false,
+                    message: `Server error:${error.message}`,
+                };
+            }
+        });
+    }
+    adminGetProductClasses() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const classes = yield ProductClass_1.ProductClass.find();
+                return {
+                    code: 200,
+                    success: true,
                     classes,
                 };
             }
@@ -728,6 +742,7 @@ let AdminResolver = class AdminResolver {
                     where: {
                         id: productId,
                     },
+                    relations: ["prices"],
                 });
                 if (!productExisting)
                     return {
@@ -741,14 +756,18 @@ let AdminResolver = class AdminResolver {
                     },
                 });
                 if (priceExisting) {
-                    if (productExisting.priceToDisplay === priceExisting.price) {
-                        productExisting.priceToDisplay = priceInput.price;
-                        yield transactionEntityManager.save(productExisting);
-                    }
-                    (priceExisting.type = priceInput.type),
-                        (priceExisting.status = priceInput.status),
-                        (priceExisting.price = priceInput.price);
+                    const checkDiscountOfProductAndPrice = productExisting.salesPercent === priceExisting.salesPercent;
+                    priceExisting.type = priceInput.type;
+                    priceExisting.status = priceInput.status;
+                    priceExisting.price = priceInput.price;
+                    priceExisting.salesPercent = priceInput.salesPercent;
                     yield transactionEntityManager.save(priceExisting);
+                    const totalPrice = productExisting.prices.reduce((prev, current) => prev + current.price, 0);
+                    productExisting.priceToDisplay = Math.floor(totalPrice / productExisting.prices.length);
+                    if (checkDiscountOfProductAndPrice) {
+                        productExisting.salesPercent = priceInput.salesPercent;
+                    }
+                    yield transactionEntityManager.save(productExisting);
                     return {
                         code: 200,
                         success: true,
@@ -762,6 +781,7 @@ let AdminResolver = class AdminResolver {
                         status: priceInput.status,
                         price: priceInput.price,
                         product: productExisting,
+                        salesPercent: priceInput.salesPercent,
                     });
                     yield transactionEntityManager.save(newPrice);
                     return {
@@ -818,6 +838,28 @@ let AdminResolver = class AdminResolver {
             }));
         });
     }
+    adminCreateCountry(countryName) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const newCountry = Country_1.Country.create({
+                    countryName,
+                });
+                yield newCountry.save();
+                return {
+                    code: 200,
+                    success: true,
+                    message: "Create Country successfully!",
+                };
+            }
+            catch (error) {
+                return {
+                    code: 500,
+                    success: false,
+                    message: error.message,
+                };
+            }
+        });
+    }
 };
 __decorate([
     (0, type_graphql_1.Mutation)((_return) => UserResponse_1.UserResponse),
@@ -853,6 +895,7 @@ __decorate([
 ], AdminResolver.prototype, "dashboard", null);
 __decorate([
     (0, type_graphql_1.Query)((_return) => KindBrandClassResponse_1.KindBrandClassResponse),
+    (0, type_graphql_1.UseMiddleware)(checkAdmin_1.checkAdmin),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -881,8 +924,9 @@ __decorate([
     (0, type_graphql_1.Mutation)((_return) => SimpleResponse_1.SimpleResponse),
     (0, type_graphql_1.UseMiddleware)(checkAdmin_1.checkAdmin),
     __param(0, (0, type_graphql_1.Arg)("fieldId")),
+    __param(1, (0, type_graphql_1.Arg)("imageSuccess")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
+    __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", Promise)
 ], AdminResolver.prototype, "adminTakeMoneyFieldCompleted", null);
 __decorate([
@@ -946,6 +990,13 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AdminResolver.prototype, "adminGetProductKinds", null);
 __decorate([
+    (0, type_graphql_1.Query)((_return) => ProductKindResponse_1.ProductKindResponse),
+    (0, type_graphql_1.UseMiddleware)(checkAdmin_1.checkAdmin),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AdminResolver.prototype, "adminGetProductClasses", null);
+__decorate([
     (0, type_graphql_1.Mutation)((_return) => PriceResponse_1.PriceResponse),
     (0, type_graphql_1.UseMiddleware)(checkAdmin_1.checkAdmin),
     __param(0, (0, type_graphql_1.Arg)("priceInput")),
@@ -964,6 +1015,14 @@ __decorate([
     __metadata("design:paramtypes", [Number, Number]),
     __metadata("design:returntype", Promise)
 ], AdminResolver.prototype, "adminAddClassToBrand", null);
+__decorate([
+    (0, type_graphql_1.Mutation)((_return) => SimpleResponse_1.SimpleResponse),
+    (0, type_graphql_1.UseMiddleware)(checkAdmin_1.checkAdmin),
+    __param(0, (0, type_graphql_1.Arg)("countryName")),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AdminResolver.prototype, "adminCreateCountry", null);
 AdminResolver = __decorate([
     (0, type_graphql_1.Resolver)()
 ], AdminResolver);

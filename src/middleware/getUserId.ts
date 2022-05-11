@@ -9,7 +9,10 @@ export const getUserId : MiddlewareFn<Context> = ({context},next) =>{
         const authHeader = context.req.header("Authorization")
         const token = authHeader && authHeader.split(" ")[1]
       
-        if(!token) return next()
+        if(!token) {
+          
+            return next()
+        }
         const decodeUser = verify(token,process.env.ACCESS_TOKEN_SECRET as Secret) as UserJwtPayload
        context.user = decodeUser
         return next()

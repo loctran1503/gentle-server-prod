@@ -22,9 +22,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BillResolver = void 0;
-const data_source_1 = require("../data-source");
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
+const data_source_1 = require("../data-source");
 const Bill_1 = require("../entites/Bill");
 const BillCancelReason_1 = require("../entites/BillCancelReason");
 const BillProduct_1 = require("../entites/BillProduct");
@@ -39,8 +39,8 @@ const BillStatusType_1 = require("../types/others/BillStatusType");
 const BillResponse_1 = require("../types/response/BillResponse");
 const CartProductResponse_1 = require("../types/response/CartProductResponse");
 const GiftResponse_1 = require("../types/response/GiftResponse");
-const IntroducePriceCaculater_1 = require("../utils/IntroducePriceCaculater");
 const constants_1 = require("../utils/constants");
+const IntroducePriceCaculater_1 = require("../utils/IntroducePriceCaculater");
 let BillResolver = class BillResolver {
     totalPrice(root) {
         let totalPrice = root.billProducts.reduce((prev, current) => prev + current.productAmount * current.productPrice, 0);
@@ -95,15 +95,19 @@ let BillResolver = class BillResolver {
                         where: {
                             id: item.priceIdForLocal,
                         },
-                        relations: ["product"],
+                        relations: ["product", "product.country"],
                     });
+                    if (!price)
+                        throw Error("Something wrong!");
+                    const realPrice = (price.price * (100 - price.salesPercent)) / 100;
                     const billProduct = BillProduct_1.BillProduct.create({
                         productName: price.product.productName,
                         productThumbnail: price.product.thumbnail,
                         productType: price.type,
-                        productPrice: price.price,
+                        productPrice: realPrice,
                         productAmount: item.productAmount,
                         priceIdForLocal: item.priceIdForLocal,
+                        countryNameForDeliveryPrice: price.product.country.countryName
                     });
                     return billProduct;
                 }))).then((list) => {
@@ -213,7 +217,8 @@ let BillResolver = class BillResolver {
                             customerPhone: customer.customerPhone,
                         },
                     });
-                    if (customerExisting && customerExisting.rejectedAmount > constants_1.REJECTED_AMOUNT)
+                    if (customerExisting &&
+                        customerExisting.rejectedAmount > constants_1.REJECTED_AMOUNT)
                         return {
                             code: 400,
                             success: false,
@@ -285,7 +290,7 @@ let BillResolver = class BillResolver {
                         where: {
                             id: billId,
                         },
-                        relations: ["customer"]
+                        relations: ["customer"],
                     });
                     if (!billExisting)
                         return {
@@ -306,7 +311,7 @@ let BillResolver = class BillResolver {
                     if (reason !== "") {
                         const newBillCancelReason = transactionManager.create(BillCancelReason_1.BillCancelReason, {
                             reason,
-                            customer: billExisting.customer
+                            customer: billExisting.customer,
                         });
                         yield transactionManager.save(newBillCancelReason);
                     }
@@ -334,7 +339,7 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], BillResolver.prototype, "totalPrice", null);
 __decorate([
-    (0, type_graphql_1.FieldResolver)(_return => Number),
+    (0, type_graphql_1.FieldResolver)((_return) => Number),
     __param(0, (0, type_graphql_1.Root)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Bill_1.Bill]),

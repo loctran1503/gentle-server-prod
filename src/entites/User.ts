@@ -43,6 +43,10 @@ export class User extends BaseEntity {
   @Column({default:false})
   isHidden:boolean
 
+  @Field({defaultValue:0})
+  @Column({default:0})
+  moneyDepot:number
+
   @Field(_return => [Bill],{nullable:true})
   @OneToMany(() =>Bill,bill => bill.user,{nullable:true})
   bills?: Bill[];

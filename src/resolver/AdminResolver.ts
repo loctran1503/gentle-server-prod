@@ -1,3 +1,4 @@
+import { Country } from "../entites/Country";
 import {
   Arg,
   Ctx,
@@ -26,7 +27,7 @@ import { FeedbackInput } from "../types/input/FeedbackInput";
 import { PriceInput } from "../types/input/PriceInput";
 import { BillStatusType } from "../types/others/BillStatusType";
 import { Context } from "../types/others/Context";
-import { MoneyBonusType } from "../types/others/MoneyBonusType";
+
 import { DashboardResponse } from "../types/response/admin/DashboardResponse";
 import { KindBrandClassResponse } from "../types/response/admin/KindBrandClassResponse";
 import { PriceResponse } from "../types/response/admin/PriceResponse";
@@ -40,6 +41,7 @@ import { createToken, sendRefreshToken } from "../utils/auth";
 import { IntroducePriceCaculater } from "../utils/IntroducePriceCaculater";
 import { MoneyConverter } from "../utils/MoneyConverter";
 import ProductManager from "../utils/ProductWasPaidCount";
+import { TakeMoneyFieldType } from "../types/others/TakeMoneyFieldType";
 
 @Resolver()
 export class AdminResolver {
@@ -90,26 +92,22 @@ export class AdminResolver {
   @Mutation((_return) => ProductKindResponse)
   @UseMiddleware(checkAdmin)
   async adminCreateProductKind(
-    @Arg("name") name: string
+    @Arg("name") name: string,
   ): Promise<ProductKindResponse> {
     return await dataSource.transaction(async (transactionManager) => {
-      try {
-        const productKindExisting = await transactionManager.findOne(
-          ProductKind,
-          {
-            where: {
-              name,
-            },
+      try {  
+
+        const countries =await  Country.find()
+        if(!countries){
+          return{
+            code:400,
+            success:false,
+            message:"Country not found"
           }
-        );
-        if (productKindExisting)
-          return {
-            code: 400,
-            success: false,
-            message: "Productkind already have",
-          };
+        }
         const newProductKind = transactionManager.create(ProductKind, {
           name,
+          countries
         });
         await transactionManager.save(newProductKind);
         return {
@@ -134,21 +132,6 @@ export class AdminResolver {
   ): Promise<ProductKindResponse> {
     return await dataSource.transaction(async (transactionManager) => {
       try {
-        const productClassExisting = await transactionManager.findOne(
-          ProductClass,
-          {
-            where: {
-              name,
-            },
-          }
-        );
-        if (productClassExisting)
-          return {
-            code: 400,
-            success: false,
-            message: "ProductClass already have",
-          };
-
         const productKindExisting = await transactionManager.findOne(
           ProductKind,
           {
@@ -205,7 +188,7 @@ export class AdminResolver {
           TakeMoneyField,
           {
             where: {
-              isSuccess: true,
+              status: TakeMoneyFieldType.PENDING,
             },
           }
         );
@@ -273,16 +256,16 @@ export class AdminResolver {
   }
   //get kind , brand , class
   @Query((_return) => KindBrandClassResponse)
+  @UseMiddleware(checkAdmin)
   async adminGetKindBrandClass(): Promise<KindBrandClassResponse> {
     return await dataSource.transaction(async (transactionManager) => {
       try {
         const kinds = await transactionManager.find(ProductKind);
-        const brands = await transactionManager.find(Brand, {
-          relations: ["kind"],
-        });
+        const brands = await transactionManager.find(Brand);
         const classes = await transactionManager.find(ProductClass, {
           relations: ["kind"],
         });
+
         return {
           code: 200,
           success: true,
@@ -336,7 +319,7 @@ export class AdminResolver {
     try {
       const fields = await TakeMoneyField.find({
         where: {
-          isSuccess: true,
+          status: TakeMoneyFieldType.PENDING,
         },
         relations: ["user", "user.moneyBonuses"],
       });
@@ -395,9 +378,8 @@ export class AdminResolver {
   @UseMiddleware(checkAdmin)
   async adminTakeMoneyFieldCompleted(
     @Arg("fieldId") fieldId: number,
-  
+    @Arg("imageSuccess") imageSuccess: string
   ): Promise<SimpleResponse> {
- 
     return await dataSource.transaction(async (transactionManager) => {
       try {
         const fieldExisting = await transactionManager.findOne(TakeMoneyField, {
@@ -412,15 +394,10 @@ export class AdminResolver {
             success: false,
             message: "TakeMoneyField not found",
           };
-        // fieldExisting.isSuccessImage = imageSuccess;
-
-        const newFieldMoneyBonus = transactionManager.create(MoneyBonus, {
-          moneyNumber: fieldExisting.money,
-          description: "Rút tiền",
-          type: MoneyBonusType.TAKE,
-          user: fieldExisting.user,
-        });
-        await transactionManager.save(newFieldMoneyBonus);
+        fieldExisting.isSuccessImage = imageSuccess;
+        fieldExisting.status = TakeMoneyFieldType.SUCCESS
+     
+        await transactionManager.save(fieldExisting);
 
         return {
           code: 200,
@@ -451,13 +428,28 @@ export class AdminResolver {
           },
           relations: ["user"],
         });
+        const userExisting = await transactionManager.findOne(User,{
+          where:{
+            id:fieldExisting?.user.id
+          }
+        })
         if (!fieldExisting)
-          return {
-            code: 400,
-            success: false,
-            message: "TakeMoneyField not found",
-          };
-        fieldExisting.isSuccess = false;
+        return {
+          code: 400,
+          success: false,
+          message: "TakeMoneyField not found",
+        };
+        if(!userExisting){
+          return{
+            code:400,
+            success:false,
+            message:"User not found"
+          }
+        }
+        userExisting.moneyDepot += fieldExisting.money
+        await transactionManager.save(userExisting)
+       
+        fieldExisting.status = TakeMoneyFieldType.FAIL;
         fieldExisting.cancelReason = cancelReason;
         await transactionManager.save(fieldExisting);
 
@@ -631,15 +623,16 @@ export class AdminResolver {
               success: false,
               message: "Introduce code invalid: User not found",
             };
-        
-          const newFieldMoneyBonus = transactionManager.create(MoneyBonus,{
+
+          const newFieldMoneyBonus = transactionManager.create(MoneyBonus, {
             description: `Bạn vừa nhận được ${MoneyConverter(
               IntroducePriceCaculater(totalPrice)
             )} từ mã giới thiệu`,
-            moneyNumber: totalPrice,
-            type: MoneyBonusType.GET,
+            moneyNumber: IntroducePriceCaculater(totalPrice),
             user: userExisting,
           });
+          userExisting.moneyDepot += IntroducePriceCaculater(totalPrice)
+          await transactionManager.save(userExisting)
           await transactionManager.save(newFieldMoneyBonus);
           return {
             code: 200,
@@ -668,27 +661,27 @@ export class AdminResolver {
   async adminHandleBillReject(
     @Arg("billId") billId: number
   ): Promise<SimpleResponse> {
-    return await dataSource.transaction(async transactionManager =>{
+    return await dataSource.transaction(async (transactionManager) => {
       try {
-        const billExisting = await transactionManager.findOne(Bill,{
+        const billExisting = await transactionManager.findOne(Bill, {
           where: {
             id: billId,
           },
           relations: ["customer"],
         });
-  
+
         if (!billExisting)
           return {
             code: 400,
             success: false,
             message: "bill not found",
           };
-        const customerExisting = await transactionManager.findOne(Customer,{
+        const customerExisting = await transactionManager.findOne(Customer, {
           where: {
             id: billExisting.customer.id,
           },
         });
-  
+
         if (!customerExisting)
           return {
             code: 400,
@@ -710,16 +703,16 @@ export class AdminResolver {
           message: `Server error:${error.message}`,
         };
       }
-    })
+    });
   }
   @Mutation((_return) => PriceResponse)
   async adminEditProductPrice(
     @Arg("priceId") priceId: number,
     @Arg("priceChanging") priceChanging: number
   ): Promise<PriceResponse> {
-    return await dataSource.transaction(async transactionManager =>{
+    return await dataSource.transaction(async (transactionManager) => {
       try {
-        const priceExisting = await transactionManager.findOne(Price,{
+        const priceExisting = await transactionManager.findOne(Price, {
           where: {
             id: priceId,
           },
@@ -744,23 +737,21 @@ export class AdminResolver {
           message: `Server error:${error.message}`,
         };
       }
-    })
+    });
   }
 
-
-  //get Product Kind(For create product class and brand)
+  //get Product Kind
   @Query((_return) => ProductKindResponse)
   @UseMiddleware(checkAdmin)
   async adminGetProductKinds(): Promise<ProductKindResponse> {
     try {
       const items = await ProductKind.find();
-      const classes = await ProductClass.find();
-
+  
       return {
         code: 200,
         success: true,
         kinds: items,
-        classes,
+  
       };
     } catch (error) {
       return {
@@ -770,6 +761,26 @@ export class AdminResolver {
       };
     }
   }
+    //get Product Class
+    @Query((_return) => ProductKindResponse)
+    @UseMiddleware(checkAdmin)
+    async adminGetProductClasses(): Promise<ProductKindResponse> {
+      try {
+        const classes = await ProductClass.find();
+    
+        return {
+          code: 200,
+          success: true,
+          classes,
+        };
+      } catch (error) {
+        return {
+          code: 500,
+          success: false,
+          message: `Server error:${error.message}`,
+        };
+      }
+    }
 
   //create or edit price field
   @Mutation((_return) => PriceResponse)
@@ -784,6 +795,7 @@ export class AdminResolver {
         where: {
           id: productId,
         },
+        relations: ["prices"],
       });
       if (!productExisting)
         return {
@@ -797,16 +809,26 @@ export class AdminResolver {
         },
       });
       if (priceExisting) {
-        if (productExisting.priceToDisplay === priceExisting.price) {
-          productExisting.priceToDisplay = priceInput.price;
-          await transactionEntityManager.save(productExisting);
-        }
-
-        (priceExisting.type = priceInput.type),
-          (priceExisting.status = priceInput.status),
-          (priceExisting.price = priceInput.price);
+        const checkDiscountOfProductAndPrice =
+          productExisting.salesPercent === priceExisting.salesPercent;
+          
+        priceExisting.type = priceInput.type;
+        priceExisting.status = priceInput.status;
+        priceExisting.price = priceInput.price;
+        priceExisting.salesPercent = priceInput.salesPercent;
         await transactionEntityManager.save(priceExisting);
-
+        const totalPrice = productExisting.prices.reduce(
+          (prev, current) => prev + current.price,
+          0
+        );
+        //change pricetoDisplay and pricePercent of product if need
+        productExisting.priceToDisplay = Math.floor(
+          totalPrice / productExisting.prices.length
+        );
+        if (checkDiscountOfProductAndPrice) {
+          productExisting.salesPercent = priceInput.salesPercent;
+        }
+        await transactionEntityManager.save(productExisting);
         return {
           code: 200,
           success: true,
@@ -819,6 +841,7 @@ export class AdminResolver {
           status: priceInput.status,
           price: priceInput.price,
           product: productExisting,
+          salesPercent: priceInput.salesPercent,
         });
         await transactionEntityManager.save(newPrice);
         return {
@@ -836,9 +859,9 @@ export class AdminResolver {
     @Arg("brandId") brandId: number,
     @Arg("classId") classId: number
   ): Promise<SimpleResponse> {
-    return await dataSource.transaction(async transactionManager => {
+    return await dataSource.transaction(async (transactionManager) => {
       try {
-        const brandExisting = await transactionManager.findOne(Brand,{
+        const brandExisting = await transactionManager.findOne(Brand, {
           where: {
             id: brandId,
           },
@@ -850,7 +873,7 @@ export class AdminResolver {
             success: false,
             message: "Brand not found",
           };
-        const classExisting = await transactionManager.findOne(ProductClass,{
+        const classExisting = await transactionManager.findOne(ProductClass, {
           where: {
             id: classId,
           },
@@ -861,11 +884,9 @@ export class AdminResolver {
             success: false,
             message: "class not found",
           };
-        //  let tempList : ProductClass[] = brandExisting.productClasses.map(item => item)
-        //   tempList.push(classExisting)
-  
+
         brandExisting.productClasses.push(classExisting);
-  
+
         await transactionManager.save(brandExisting);
         return {
           code: 200,
@@ -878,6 +899,29 @@ export class AdminResolver {
           message: error.message,
         };
       }
-    })
+    });
+  }
+  @Mutation((_return) => SimpleResponse)
+  @UseMiddleware(checkAdmin)
+  async adminCreateCountry(
+    @Arg("countryName") countryName: string
+  ): Promise<SimpleResponse> {
+    try {
+      const newCountry = Country.create({
+        countryName,
+      });
+      await newCountry.save();
+      return {
+        code: 200,
+        success: true,
+        message: "Create Country successfully!",
+      };
+    } catch (error) {
+      return {
+        code: 500,
+        success: false,
+        message: error.message,
+      };
+    }
   }
 }

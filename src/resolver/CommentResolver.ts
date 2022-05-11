@@ -15,7 +15,7 @@ import { UserComment } from "../entites/UserComment";
 import { checkAuth } from "../middleware/checkAuth";
 import { CommentInput } from "../types/input/CommentInput";
 import { Context } from "../types/others/Context";
-import { MoneyBonusType } from "../types/others/MoneyBonusType";
+
 import { CommentResponse } from "../types/response/CommentResponse";
 import {
   CommentPriceCaculater,
@@ -122,11 +122,12 @@ export class CommentResolver {
         const newFieldMoneyBonus = transactionManager.create(MoneyBonus,{
           description: `Bạn vừa nhận được ${MoneyConverter(
             CommentPriceCaculater(totalPrice)
-          )} từ bình luận của bạn, Cảm ơn bạn đã đóng góp ý kiến , Chúc bạn có một ngày vui vẻ và tràn đầy năng lượng`,
+          )} từ bình luận của bạn.`,
           moneyNumber: CommentPriceCaculater(totalPrice),
-          type: MoneyBonusType.GET,
           user: userExisting,
         });
+        userExisting.moneyDepot += CommentPriceCaculater(totalPrice)
+        await transactionManager.save(userExisting)
         await transactionManager.save(newFieldMoneyBonus);
         //Change iscomment
         billExisting.isCommented = true;

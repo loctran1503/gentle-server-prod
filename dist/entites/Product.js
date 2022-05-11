@@ -13,6 +13,7 @@ exports.Product = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Brand_1 = require("./Brand");
+const Country_1 = require("./Country");
 const Price_1 = require("./Price");
 const ProductClass_1 = require("./ProductClass");
 const ProductKind_1 = require("./ProductKind");
@@ -26,7 +27,7 @@ __decorate([
 ], Product.prototype, "id", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
-    (0, typeorm_1.Column)({ unique: true }),
+    (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], Product.prototype, "productName", void 0);
 __decorate([
@@ -86,6 +87,11 @@ __decorate([
     (0, typeorm_1.ManyToOne)(() => ProductClass_1.ProductClass, item => item.products),
     __metadata("design:type", ProductClass_1.ProductClass)
 ], Product.prototype, "class", void 0);
+__decorate([
+    (0, type_graphql_1.Field)(_return => Country_1.Country),
+    (0, typeorm_1.ManyToOne)(() => Country_1.Country, country => country.products),
+    __metadata("design:type", Country_1.Country)
+], Product.prototype, "country", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.CreateDateColumn)(),

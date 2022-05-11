@@ -7,6 +7,7 @@ const Bill_1 = require("./entites/Bill");
 const BillCancelReason_1 = require("./entites/BillCancelReason");
 const BillProduct_1 = require("./entites/BillProduct");
 const Brand_1 = require("./entites/Brand");
+const Country_1 = require("./entites/Country");
 const Customer_1 = require("./entites/Customer");
 const Feedback_1 = require("./entites/Feedback");
 const MoneyBonus_1 = require("./entites/MoneyBonus");
@@ -19,12 +20,13 @@ const TakeMoneyField_1 = require("./entites/TakeMoneyField");
 const User_1 = require("./entites/User");
 const UserComment_1 = require("./entites/UserComment");
 const constants_1 = require("./utils/constants");
-exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object.assign(Object.assign({ host: constants_1.__prod__ ? process.env.HOST_PROD : process.env.HOST_DEV, type: "postgres" }, (constants_1.__prod__
+exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ host: constants_1.__prod__ ? process.env.HOST_PROD : process.env.HOST_DEV, type: "postgres" }, (constants_1.__prod__
     ? {
         url: process.env.DATABASE_URL,
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
+        port: 25060
     }
     : {
         username: process.env.PG_USERNAME_DEV,
@@ -39,12 +41,13 @@ exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object
         },
         ssl: true,
     }
-    : {})), (constants_1.__prod__ ? { migrationsRun: true } : { synchronize: true })), { logging: true, entities: [
+    : {})), (constants_1.__prod__ ? { migrationsRun: true } : { synchronize: true })), (constants_1.__prod__ ? { logging: true } : { logging: false })), { entities: [
         Admin_1.Admin,
         Bill_1.Bill,
         BillCancelReason_1.BillCancelReason,
         BillProduct_1.BillProduct,
         Brand_1.Brand,
+        Country_1.Country,
         Customer_1.Customer,
         Feedback_1.Feedback,
         MoneyBonus_1.MoneyBonus,
