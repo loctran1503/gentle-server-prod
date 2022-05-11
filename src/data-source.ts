@@ -19,6 +19,7 @@ import { TakeMoneyField } from "./entites/TakeMoneyField";
 import { User } from "./entites/User";
 import { UserComment } from "./entites/UserComment";
 import { __prod__ } from "./utils/constants";
+import fs from 'fs';
 
 export const dataSource = new DataSource({
   host:__prod__ ?   process.env.HOST_PROD : process.env.HOST_DEV,
@@ -41,10 +42,11 @@ export const dataSource = new DataSource({
     ? {
         extra: {
           ssl: {
-            rejectUnauthorized: false,
+            ca: fs.readFileSync("../ca-certificate.crt").toString()
           },
         },
         ssl: true,
+       
       }
     : {}),
     ...(__prod__   ? {migrationsRun:true} :{ synchronize: true } ),

@@ -1,4 +1,7 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.dataSource = void 0;
 const typeorm_1 = require("typeorm");
@@ -20,6 +23,7 @@ const TakeMoneyField_1 = require("./entites/TakeMoneyField");
 const User_1 = require("./entites/User");
 const UserComment_1 = require("./entites/UserComment");
 const constants_1 = require("./utils/constants");
+const fs_1 = __importDefault(require("fs"));
 exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ host: constants_1.__prod__ ? process.env.HOST_PROD : process.env.HOST_DEV, type: "postgres" }, (constants_1.__prod__
     ? {
         url: process.env.DATABASE_URL,
@@ -36,7 +40,7 @@ exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object
     ? {
         extra: {
             ssl: {
-                rejectUnauthorized: false,
+                ca: fs_1.default.readFileSync("../ca-certificate.crt").toString()
             },
         },
         ssl: true,
