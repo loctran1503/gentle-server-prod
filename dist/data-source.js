@@ -1,7 +1,4 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.dataSource = void 0;
 const typeorm_1 = require("typeorm");
@@ -23,14 +20,13 @@ const TakeMoneyField_1 = require("./entites/TakeMoneyField");
 const User_1 = require("./entites/User");
 const UserComment_1 = require("./entites/UserComment");
 const constants_1 = require("./utils/constants");
-const fs_1 = __importDefault(require("fs"));
 exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ host: constants_1.__prod__ ? process.env.HOST_PROD : process.env.HOST_DEV, type: "postgres" }, (constants_1.__prod__
     ? {
         url: process.env.DATABASE_URL,
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
-        port: 25060
+        port: 25060,
     }
     : {
         username: process.env.PG_USERNAME_DEV,
@@ -40,12 +36,12 @@ exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object
     ? {
         extra: {
             ssl: {
-                ca: fs_1.default.readFileSync("../ca-certificate.crt").toString()
+                rejectUnauthorized: false,
             },
         },
         ssl: true,
     }
-    : {})), (constants_1.__prod__ ? { migrationsRun: true } : { synchronize: true })), (constants_1.__prod__ ? { logging: true } : { logging: false })), { entities: [
+    : {})), { migrationsRun: true }), (constants_1.__prod__ ? { logging: true } : { logging: false })), { entities: [
         Admin_1.Admin,
         Bill_1.Bill,
         BillCancelReason_1.BillCancelReason,

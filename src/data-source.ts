@@ -1,4 +1,3 @@
-
 import { DataSource } from "typeorm";
 import { Admin } from "./entites/Admin";
 import { Bill } from "./entites/Bill";
@@ -19,10 +18,9 @@ import { TakeMoneyField } from "./entites/TakeMoneyField";
 import { User } from "./entites/User";
 import { UserComment } from "./entites/UserComment";
 import { __prod__ } from "./utils/constants";
-import fs from 'fs';
 
 export const dataSource = new DataSource({
-  host:__prod__ ?   process.env.HOST_PROD : process.env.HOST_DEV,
+  host: __prod__ ? process.env.HOST_PROD : process.env.HOST_DEV,
   type: "postgres",
   ...(__prod__
     ? {
@@ -30,28 +28,27 @@ export const dataSource = new DataSource({
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
-        port:25060
+        port: 25060,
       }
     : {
         username: process.env.PG_USERNAME_DEV,
         password: process.env.PG_PASSWORD_DEV,
         database: process.env.DATABASE_NAME_DEV,
-       
       }),
   ...(__prod__
     ? {
         extra: {
           ssl: {
-            ca: fs.readFileSync("../ca-certificate.crt").toString()
+            rejectUnauthorized: false,
           },
         },
         ssl: true,
-       
       }
     : {}),
-    ...(__prod__   ? {migrationsRun:true} :{ synchronize: true } ),
-    ...(__prod__   ? {logging:true} :{ logging: false } ),
-    
+  // ...(__prod__ ? { migrationsRun: true } : { synchronize: true }),
+  migrationsRun:true,
+  ...(__prod__ ? { logging: true } : { logging: false }),
+
   entities: [
     Admin,
     Bill,
@@ -72,7 +69,5 @@ export const dataSource = new DataSource({
     UserComment,
   ],
 
-   migrations: [__dirname + "/migrations/*{.js,.ts}"],
+  migrations: [__dirname + "/migrations/*{.js,.ts}"],
 });
-
-

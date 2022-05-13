@@ -10,6 +10,7 @@ import { buildSchema } from "type-graphql";
 import { dataSource } from "./data-source";
 import { resolvers, __prod__ } from "./utils/constants";
 
+
 const main = async () => {
   //Typeorm connection
   try {
@@ -50,6 +51,7 @@ const main = async () => {
   apolloServer.applyMiddleware({ app, cors: { origin: true } });
   
  
+
 
   app.listen(PORT, () =>
     console.log(

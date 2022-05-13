@@ -38,8 +38,9 @@ __decorate([
     __metadata("design:type", Array)
 ], ProductKind.prototype, "products", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(_return => [Country_1.Country], { nullable: true }),
-    (0, typeorm_1.OneToMany)(() => Country_1.Country, countries => countries.kind, { nullable: true }),
+    (0, typeorm_1.ManyToMany)(() => Country_1.Country),
+    (0, typeorm_1.JoinTable)(),
+    (0, type_graphql_1.Field)(_return => [Country_1.Country]),
     __metadata("design:type", Array)
 ], ProductKind.prototype, "countries", void 0);
 __decorate([

@@ -359,8 +359,7 @@ let ProductResolver = class ProductResolver {
                     where: {
                         countries: {
                             countryName,
-                        },
-                        products: !null,
+                        }
                     },
                     relations: ["countries", "products"],
                 });
@@ -384,10 +383,12 @@ let ProductResolver = class ProductResolver {
                     return item;
                 })))
                     .then((list) => {
+                    const filteredList = list.filter(item => { var _a; return item.products && ((_a = item.products) === null || _a === void 0 ? void 0 : _a.length) > 0; });
+                    console.log(filteredList);
                     return {
                         code: 200,
                         success: true,
-                        kinds: list,
+                        kinds: filteredList,
                     };
                 })
                     .catch((err) => {
@@ -552,28 +553,32 @@ let ProductResolver = class ProductResolver {
     getWebData(localBillProducts, { user }) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                const products = yield Promise.all(localBillProducts.map((item) => __awaiter(this, void 0, void 0, function* () {
-                    const price = yield Price_1.Price.findOne({
-                        where: {
-                            id: item.priceIdForLocal,
-                        },
-                        relations: ["product"],
+                let products = [];
+                if (localBillProducts.length > 0) {
+                    console.log(localBillProducts);
+                    products = yield Promise.all(localBillProducts.map((item) => __awaiter(this, void 0, void 0, function* () {
+                        const price = yield Price_1.Price.findOne({
+                            where: {
+                                id: item.priceIdForLocal,
+                            },
+                            relations: ["product"],
+                        });
+                        if (!price)
+                            throw new Error("price not found");
+                        const billProduct = BillProduct_1.BillProduct.create({
+                            productName: price.product.productName,
+                            productThumbnail: price.product.thumbnail,
+                            productType: price.type,
+                            productPrice: price.price,
+                            productAmount: item.productAmount,
+                            priceIdForLocal: item.priceIdForLocal,
+                            countryNameForDeliveryPrice: item.countryNameForDeliveryPrice,
+                        });
+                        return billProduct;
+                    }))).then((list) => {
+                        return list;
                     });
-                    if (!price)
-                        throw new Error("price not found");
-                    const billProduct = BillProduct_1.BillProduct.create({
-                        productName: price.product.productName,
-                        productThumbnail: price.product.thumbnail,
-                        productType: price.type,
-                        productPrice: price.price,
-                        productAmount: item.productAmount,
-                        priceIdForLocal: item.priceIdForLocal,
-                        countryNameForDeliveryPrice: item.countryNameForDeliveryPrice,
-                    });
-                    return billProduct;
-                }))).then((list) => {
-                    return list;
-                });
+                }
                 const brands = yield Brand_1.Brand.find();
                 if (user) {
                     const adminExisting = yield Admin_1.Admin.findOne({

@@ -410,11 +410,12 @@ export class ProductResolver {
         where: {
           countries: {
             countryName,
-          },
-          products: !null,
+          }
         },
         relations: ["countries", "products"],
       });
+ 
+    
       const res: ProductKindResponse = await Promise.all(
         kinds.map(async (item) => {
           item.products = await Product.find({
@@ -437,10 +438,12 @@ export class ProductResolver {
         })
       )
         .then((list) => {
+          const filteredList : ProductKind[] = list.filter(item => item.products && item.products?.length>0)
+          console.log(filteredList)
           return {
             code: 200,
             success: true,
-            kinds: list,
+            kinds: filteredList,
           };
         })
         .catch((err) => {
@@ -615,31 +618,36 @@ export class ProductResolver {
     @Ctx() { user }: Context
   ): Promise<WebDataResponse> {
     try {
-      const products: BillProduct[] = await Promise.all<BillProduct>(
-        localBillProducts.map(async (item) => {
-          const price = await Price.findOne({
-            where: {
-              id: item.priceIdForLocal,
-            },
-            relations: ["product"],
-          });
-          if (!price) throw new Error("price not found");
+      let products: BillProduct[] = []
 
-          const billProduct = BillProduct.create({
-            productName: price.product.productName,
-            productThumbnail: price.product.thumbnail,
-            productType: price.type,
-            productPrice: price.price,
-            productAmount: item.productAmount,
-            priceIdForLocal: item.priceIdForLocal,
-            countryNameForDeliveryPrice: item.countryNameForDeliveryPrice,
-          });
-
-          return billProduct;
-        })
-      ).then((list) => {
-        return list;
-      });
+      if(localBillProducts.length>0){
+        console.log(localBillProducts)
+      products =  await Promise.all<BillProduct>(
+          localBillProducts.map(async (item) => {
+            const price = await Price.findOne({
+              where: {
+                id: item.priceIdForLocal,
+              },
+              relations: ["product"],
+            });
+            if (!price) throw new Error("price not found");
+  
+            const billProduct = BillProduct.create({
+              productName: price.product.productName,
+              productThumbnail: price.product.thumbnail,
+              productType: price.type,
+              productPrice: price.price,
+              productAmount: item.productAmount,
+              priceIdForLocal: item.priceIdForLocal,
+              countryNameForDeliveryPrice: item.countryNameForDeliveryPrice,
+            });
+  
+            return billProduct;
+          })
+        ).then((list) => {
+          return list;
+        });
+      }
 
       const brands = await Brand.find();
       if(user){

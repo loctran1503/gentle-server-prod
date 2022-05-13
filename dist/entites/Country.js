@@ -13,7 +13,6 @@ exports.Country = void 0;
 const type_graphql_1 = require("type-graphql");
 const typeorm_1 = require("typeorm");
 const Product_1 = require("./Product");
-const ProductKind_1 = require("./ProductKind");
 let Country = class Country extends typeorm_1.BaseEntity {
 };
 __decorate([
@@ -26,11 +25,6 @@ __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
 ], Country.prototype, "countryName", void 0);
-__decorate([
-    (0, type_graphql_1.Field)((_return) => [ProductKind_1.ProductKind], { nullable: true }),
-    (0, typeorm_1.ManyToOne)(() => ProductKind_1.ProductKind, kind => kind.countries, { nullable: true }),
-    __metadata("design:type", Array)
-], Country.prototype, "kind", void 0);
 __decorate([
     (0, type_graphql_1.Field)((_return) => [Product_1.Product], { nullable: true }),
     (0, typeorm_1.OneToMany)(() => Product_1.Product, (product) => product.country, { nullable: true }),

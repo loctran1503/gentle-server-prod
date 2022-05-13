@@ -3,7 +3,7 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
-  Entity, OneToMany, PrimaryGeneratedColumn
+  Entity, JoinTable, ManyToMany, OneToMany, PrimaryGeneratedColumn
 } from "typeorm";
 
 import { Country } from "./Country";
@@ -31,9 +31,12 @@ export class ProductKind extends BaseEntity {
   @OneToMany(() =>Product,product => product.kind,{nullable:true})
   products?: Product[];
 
-  @Field(_return => [Country],{nullable:true})
-  @OneToMany(() =>Country,countries => countries.kind,{nullable:true})
+  @ManyToMany(() => Country)
+  @JoinTable()
+  @Field(_return => [Country])
   countries?: Country[];
+
+
 
   @Field()
   @CreateDateColumn()
