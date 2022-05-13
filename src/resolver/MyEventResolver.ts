@@ -69,15 +69,15 @@ export class MyEventResolver {
     @Arg("input") input: MyEventInput
   ): Promise<MyEventResponse> {
     return await dataSource.transaction(async transactionManager =>{
-      const { content, title, thumbnail,summary,instructionImages } = input;
+      const { content, title, thumbnailForDesktop,thumbnailForMobile } = input;
     try {
-      if(instructionImages){
+     
         const newEvent = transactionManager.create(MyEvent,{
           content,
           title,
-          thumbnail,
-          summary,
-          instructionImages
+          thumbnailForDesktop,
+          thumbnailForMobile,
+ 
         });
         await transactionManager.save(newEvent)
         return{
@@ -85,20 +85,8 @@ export class MyEventResolver {
           success:true,
           myEvent:newEvent
         }
-      }else{
-        const newEvent = transactionManager.create(MyEvent,{
-          content,
-          title,
-          thumbnail,
-          summary
-        });
-        await transactionManager.save(newEvent)
-        return{
-          code:200,
-          success:true,
-          myEvent:newEvent
-        }
-      }
+   
+      
       
     } catch (error) {
       return {

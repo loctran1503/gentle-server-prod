@@ -9,11 +9,12 @@ export class MyEventInput {
   content: string;
 
   @Field()
-  thumbnail: string;
+  thumbnailForDesktop: string;
 
   @Field()
-  summary: string;
+  thumbnailForMobile: string;
 
-  @Field(_type => [String],{nullable:true})
-  instructionImages?: string[];
+
+
+  
 }

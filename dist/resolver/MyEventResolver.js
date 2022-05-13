@@ -92,37 +92,20 @@ let MyEventResolver = class MyEventResolver {
     adminCreateEvent(input) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield data_source_1.dataSource.transaction((transactionManager) => __awaiter(this, void 0, void 0, function* () {
-                const { content, title, thumbnail, summary, instructionImages } = input;
+                const { content, title, thumbnailForDesktop, thumbnailForMobile } = input;
                 try {
-                    if (instructionImages) {
-                        const newEvent = transactionManager.create(MyEvent_1.MyEvent, {
-                            content,
-                            title,
-                            thumbnail,
-                            summary,
-                            instructionImages
-                        });
-                        yield transactionManager.save(newEvent);
-                        return {
-                            code: 200,
-                            success: true,
-                            myEvent: newEvent
-                        };
-                    }
-                    else {
-                        const newEvent = transactionManager.create(MyEvent_1.MyEvent, {
-                            content,
-                            title,
-                            thumbnail,
-                            summary
-                        });
-                        yield transactionManager.save(newEvent);
-                        return {
-                            code: 200,
-                            success: true,
-                            myEvent: newEvent
-                        };
-                    }
+                    const newEvent = transactionManager.create(MyEvent_1.MyEvent, {
+                        content,
+                        title,
+                        thumbnailForDesktop,
+                        thumbnailForMobile,
+                    });
+                    yield transactionManager.save(newEvent);
+                    return {
+                        code: 200,
+                        success: true,
+                        myEvent: newEvent
+                    };
                 }
                 catch (error) {
                     return {

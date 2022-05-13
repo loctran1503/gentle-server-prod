@@ -9,12 +9,12 @@
     "start": "NODE_ENV=production nodemon dist/index.js",
     "watch": "tsc -w",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "typeorm": "rm -rf src/migrations && node --require ts-node/register ./node_modules/typeorm/cli.js -d ./dist/data-source.js && tsc"
+    "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js -d ./dist/data-source.js"
   },
-  "author": "",
+  "author": "", 
   "license": "ISC",
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.2",
+    "@types/cookie-parser": "^1.4.2", 
     "@types/cors": "^2.8.12",
     "@types/express-session": "^1.17.4",
     "@types/jsonwebtoken": "^8.5.8",

@@ -33,12 +33,12 @@ __decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], MyEvent.prototype, "thumbnail", void 0);
+], MyEvent.prototype, "thumbnailForDesktop", void 0);
 __decorate([
-    (0, type_graphql_1.Field)(_type => [String], { nullable: true }),
-    (0, typeorm_1.Column)({ type: "simple-array", nullable: true }),
-    __metadata("design:type", Array)
-], MyEvent.prototype, "instructionImages", void 0);
+    (0, type_graphql_1.Field)(),
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], MyEvent.prototype, "thumbnailForMobile", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     (0, typeorm_1.Column)(),

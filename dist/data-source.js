@@ -22,7 +22,6 @@ const UserComment_1 = require("./entites/UserComment");
 const constants_1 = require("./utils/constants");
 exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ host: constants_1.__prod__ ? process.env.HOST_PROD : process.env.HOST_DEV, type: "postgres" }, (constants_1.__prod__
     ? {
-        url: process.env.DATABASE_URL,
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,

@@ -24,15 +24,11 @@ __decorate([
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
-], MyEventInput.prototype, "thumbnail", void 0);
+], MyEventInput.prototype, "thumbnailForDesktop", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
     __metadata("design:type", String)
-], MyEventInput.prototype, "summary", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(_type => [String], { nullable: true }),
-    __metadata("design:type", Array)
-], MyEventInput.prototype, "instructionImages", void 0);
+], MyEventInput.prototype, "thumbnailForMobile", void 0);
 MyEventInput = __decorate([
     (0, type_graphql_1.InputType)()
 ], MyEventInput);

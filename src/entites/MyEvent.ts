@@ -24,12 +24,15 @@ export class MyEvent extends BaseEntity {
 
   @Field()
   @Column()
-  thumbnail: string;
+  thumbnailForDesktop: string;
 
-  @Field(_type => [String],{nullable:true})
-  @Column( {type:"simple-array",nullable:true})
-  instructionImages?: string[];
+  @Field()
+  @Column()
+  thumbnailForMobile: string;
 
+
+
+  
   @Field()
   @Column()
   summary: string;

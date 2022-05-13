@@ -24,7 +24,7 @@ export const dataSource = new DataSource({
   type: "postgres",
   ...(__prod__
     ? {
-        url: process.env.DATABASE_URL,
+   
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
