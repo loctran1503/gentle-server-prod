@@ -41,11 +41,6 @@ __decorate([
 ], MyEvent.prototype, "thumbnailForMobile", void 0);
 __decorate([
     (0, type_graphql_1.Field)(),
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], MyEvent.prototype, "summary", void 0);
-__decorate([
-    (0, type_graphql_1.Field)(),
     (0, typeorm_1.CreateDateColumn)(),
     __metadata("design:type", Date)
 ], MyEvent.prototype, "createdAt", void 0);

@@ -32,11 +32,6 @@ export class MyEvent extends BaseEntity {
 
 
 
-  
-  @Field()
-  @Column()
-  summary: string;
-
   @Field()
   @CreateDateColumn()
   createdAt: Date;

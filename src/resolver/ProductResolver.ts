@@ -439,7 +439,7 @@ export class ProductResolver {
       )
         .then((list) => {
           const filteredList : ProductKind[] = list.filter(item => item.products && item.products?.length>0)
-          console.log(filteredList)
+     
           return {
             code: 200,
             success: true,

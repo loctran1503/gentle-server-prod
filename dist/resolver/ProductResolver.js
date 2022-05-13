@@ -384,7 +384,6 @@ let ProductResolver = class ProductResolver {
                 })))
                     .then((list) => {
                     const filteredList = list.filter(item => { var _a; return item.products && ((_a = item.products) === null || _a === void 0 ? void 0 : _a.length) > 0; });
-                    console.log(filteredList);
                     return {
                         code: 200,
                         success: true,
