@@ -105,6 +105,9 @@ export class UserResolver {
           },
         });
         if (admin) {
+          admin.adminName = authInput.userName!
+          admin.avatar = authInput.userAvartar!
+        await transactionManager.save(admin)
           // sendRefreshToken(res, admin.id.toString());
           return {
             code: 200,

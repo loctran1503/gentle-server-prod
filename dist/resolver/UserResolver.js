@@ -103,6 +103,9 @@ let UserResolver = class UserResolver {
                         },
                     });
                     if (admin) {
+                        admin.adminName = authInput.userName;
+                        admin.avatar = authInput.userAvartar;
+                        yield transactionManager.save(admin);
                         return {
                             code: 200,
                             success: true,
