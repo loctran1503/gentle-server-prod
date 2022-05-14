@@ -34,11 +34,11 @@ export class MyEventResolver {
   }
   //get one event
   @Query((_return) => MyEventResponse)
-  async getEvent(@Arg("title")title: string): Promise<MyEventResponse> {
+  async getEvent(@Arg("eventId")eventId: number): Promise<MyEventResponse> {
     try {
       const event = await MyEvent.findOne({
         where:{
-          title:title
+          id:eventId
         }
       });
       if (event) {

@@ -57,12 +57,12 @@ let MyEventResolver = class MyEventResolver {
             }
         });
     }
-    getEvent(title) {
+    getEvent(eventId) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const event = yield MyEvent_1.MyEvent.findOne({
                     where: {
-                        title: title
+                        id: eventId
                     }
                 });
                 if (event) {
@@ -126,9 +126,9 @@ __decorate([
 ], MyEventResolver.prototype, "getEvents", null);
 __decorate([
     (0, type_graphql_1.Query)((_return) => MyEventResponse_1.MyEventResponse),
-    __param(0, (0, type_graphql_1.Arg)("title")),
+    __param(0, (0, type_graphql_1.Arg)("eventId")),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], MyEventResolver.prototype, "getEvent", null);
 __decorate([
