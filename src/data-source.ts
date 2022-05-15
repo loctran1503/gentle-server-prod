@@ -20,8 +20,7 @@ import { UserComment } from "./entites/UserComment";
 import { __prod__ } from "./utils/constants";
 console.log("prod",__prod__)
 export const dataSource = new DataSource({
-
-  host: __prod__ ? process.env.HOST_DEV : process.env.HOST_DEV,
+  host: __prod__ ? process.env.HOST_PROD : process.env.HOST_DEV,
   type: "postgres",
   ...(__prod__
     ? {
@@ -29,7 +28,7 @@ export const dataSource = new DataSource({
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
-        port: 5432,
+        port: 25060,
       }
     : {
         username: process.env.PG_USERNAME_DEV,
