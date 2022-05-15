@@ -28,7 +28,7 @@ export const dataSource = new DataSource({
         username: process.env.PG_USERNAME_PROD,
         password: process.env.PG_PASSWORD_PROD,
         database: process.env.DATABASE_NAME_PROD,
-        port: 25060,
+        port: 5432,
       }
     : {
         username: process.env.PG_USERNAME_DEV,
