@@ -279,6 +279,13 @@ export class UserResolver {
         },
         relations: ["bills"],
       });
+      const totalUserHideCount = await User.count({
+        where: {
+          bills: !null,
+          isHidden: true,
+        },
+        relations: ["bills"],
+      })
 
       const cursor = skip + USER_LIMIT;
       let hasMore: boolean = false;
@@ -300,7 +307,8 @@ export class UserResolver {
           code: 200,
           success: true,
           users,
-          totalCount,
+          userHideCount:totalUserHideCount || 0,
+          totalCount:totalCount ||0,
           cursor,
           hasMore,
         };

@@ -20,6 +20,7 @@ const TakeMoneyField_1 = require("./entites/TakeMoneyField");
 const User_1 = require("./entites/User");
 const UserComment_1 = require("./entites/UserComment");
 const constants_1 = require("./utils/constants");
+console.log("prod", constants_1.__prod__);
 exports.dataSource = new typeorm_1.DataSource(Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({ host: constants_1.__prod__ ? process.env.HOST_PROD : process.env.HOST_DEV, type: "postgres" }, (constants_1.__prod__
     ? {
         username: process.env.PG_USERNAME_PROD,

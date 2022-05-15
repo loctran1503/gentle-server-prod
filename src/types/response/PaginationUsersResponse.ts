@@ -19,6 +19,9 @@ export class PaginationUsersResponse implements IResponse{
     @Field()
     cursor?:number
 
+    @Field()
+    userHideCount?:number
+
     @Field(_return =>[User],{nullable:true})
     users?:User[]
 

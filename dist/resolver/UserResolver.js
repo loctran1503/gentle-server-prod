@@ -268,6 +268,13 @@ let UserResolver = class UserResolver {
                     },
                     relations: ["bills"],
                 });
+                const totalUserHideCount = yield User_1.User.count({
+                    where: {
+                        bills: !null,
+                        isHidden: true,
+                    },
+                    relations: ["bills"],
+                });
                 const cursor = skip + constants_1.USER_LIMIT;
                 let hasMore = false;
                 switch (true) {
@@ -286,7 +293,8 @@ let UserResolver = class UserResolver {
                         code: 200,
                         success: true,
                         users,
-                        totalCount,
+                        userHideCount: totalUserHideCount || 0,
+                        totalCount: totalCount || 0,
                         cursor,
                         hasMore,
                     };

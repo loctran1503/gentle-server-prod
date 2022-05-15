@@ -28,6 +28,10 @@ __decorate([
     __metadata("design:type", Number)
 ], PaginationUsersResponse.prototype, "cursor", void 0);
 __decorate([
+    (0, type_graphql_1.Field)(),
+    __metadata("design:type", Number)
+], PaginationUsersResponse.prototype, "userHideCount", void 0);
+__decorate([
     (0, type_graphql_1.Field)(_return => [User_1.User], { nullable: true }),
     __metadata("design:type", Array)
 ], PaginationUsersResponse.prototype, "users", void 0);
