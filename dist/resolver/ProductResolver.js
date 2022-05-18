@@ -159,10 +159,12 @@ let ProductResolver = class ProductResolver {
                         };
                     const totalPrice = prices.reduce((prev, current) => prev + current.price, 0);
                     const salesPercent = Math.max.apply(Math, prices.map((price) => price.salesPercent));
+                    let imgList = [];
+                    imgList.unshift(thumbnail);
                     const newProduct = transactionManager.create(Product_1.Product, {
                         productName,
                         thumbnail,
-                        imgDescription,
+                        imgDescription: imgDescription.length > 0 ? imgDescription : imgList,
                         description,
                         priceToDisplay: Math.floor(totalPrice / prices.length),
                         brand: brandExisting,

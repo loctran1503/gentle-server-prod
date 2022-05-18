@@ -36,9 +36,10 @@ export const VIETNAM= "VIỆT NAM"
 export const AMERICA_INFO: string[] = [
   `Bạn sẽ nhận được hóa đơn trực tiếp từ những cửa hàng uy tín ở ${AMERICA}.`,
   `Bạn có thể liên hệ với các cửa hàng trên hóa đơn để kiểm tra sản phẩm.`,
+  `Hoàn 100% tiền nếu sản phẩm bị vỡ trong quá trình vận chuyển`,
   
   "Miễn phí vận chuyển với đơn hàng trên 5.000.000đ.",
-  "Thời gian nhận hàng từ 14 đến 21 ngày kể từ ngày đơn hàng được xác nhận.",
+  "Thời gian nhận hàng từ 16 đến 21 ngày kể từ ngày đơn hàng được xác nhận.",
   "Bạn vui lòng thanh toán trước 25% giá trị đơn hàng.",
   "Trân trọng cảm ơn Bạn đã đọc thông tin này.",
 ];

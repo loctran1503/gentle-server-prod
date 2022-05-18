@@ -194,11 +194,13 @@ export class ProductResolver {
           Math,
           prices.map((price) => price.salesPercent)
         );
-
+        // If imgDescription null(product just have thumbnail),assign thumbnail into imgDescription
+        let imgList : string [] = []
+        imgList.unshift(thumbnail)
         const newProduct = transactionManager.create(Product, {
           productName,
           thumbnail,
-          imgDescription,
+          imgDescription:imgDescription.length>0 ? imgDescription : imgList,
           description,
           priceToDisplay: Math.floor(totalPrice / prices.length),
           brand: brandExisting,
