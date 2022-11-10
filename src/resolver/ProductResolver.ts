@@ -534,7 +534,7 @@ export class ProductResolver {
           };
           break;
         case "DATE_DESC":
-          findProductsOption.order = {
+          findProductsOption.order = {   
             createdAt: "DESC",
           };
           break;

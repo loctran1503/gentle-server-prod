@@ -18,7 +18,7 @@ import { TakeMoneyField } from "./entites/TakeMoneyField";
 import { User } from "./entites/User";
 import { UserComment } from "./entites/UserComment";
 import { __prod__ } from "./utils/constants";
-console.log("prod",__prod__)
+
 export const dataSource = new DataSource({
   host: __prod__ ? process.env.HOST_PROD : process.env.HOST_DEV,
   type: "postgres",
@@ -45,8 +45,8 @@ export const dataSource = new DataSource({
         ssl: true,
       }
     : {}),
-  // ...(__prod__ ? { migrationsRun: true } : { synchronize: true }),
-  migrationsRun:true,
+  ...(__prod__ ? { migrationsRun: true } : { synchronize: true }),
+  // migrationsRun:true,
   ...(__prod__ ? { logging: true } : { logging: false }),
 
   entities: [

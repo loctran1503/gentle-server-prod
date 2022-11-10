@@ -27,7 +27,7 @@ export const sendRefreshToken = (res: Response, userId: string) => {
       secure: true,
       sameSite: !__prod__ ? "none" : "lax",
       path:"/refresh_token",
-      expires: new Date(Date.now() + 86400 * 1000 * 180), //180days
+      expires: new Date(Date.now() + 86400 * 1000 * 180),
     }
   );
 };
